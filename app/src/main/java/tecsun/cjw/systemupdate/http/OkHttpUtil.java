@@ -38,7 +38,7 @@ public class OkHttpUtil {
 	/**
 	 * 通用网络请求
 	 *
-	 * @param url 下载链接
+	 * @param url      下载链接
 	 * @param callback 回调
 	 */
 	public void doHttp(String url, Callback callback) {
