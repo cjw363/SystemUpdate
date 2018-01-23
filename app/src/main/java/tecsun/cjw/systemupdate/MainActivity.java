@@ -23,6 +23,10 @@ public class MainActivity extends AppCompatActivity {
     setContentView(R.layout.activity_main);
     ButterKnife.bind(this);
 
+    // 获取当前系统版本号 TecSun TA V1.2.10 Build20170728
+    String currVersion = android.os.Build.DISPLAY;
+
+    System.out.println(currVersion);
     DownloadManager.getInstance().registerObserver(new DownloadManager.DownloadObserver() {
       @Override
       public void onDownloadStateChanged(DownloadInfo downloadInfo) {
