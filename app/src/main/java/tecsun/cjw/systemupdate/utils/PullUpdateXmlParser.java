@@ -124,6 +124,7 @@ public class PullUpdateXmlParser {
           break;
         case XmlPullParser.END_TAG: // 标签结束
           if ("system".equals(nodeName)) {
+
           }
           break;
       }
