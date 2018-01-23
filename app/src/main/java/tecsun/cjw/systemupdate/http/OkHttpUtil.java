@@ -1,4 +1,4 @@
-package tecsun.cjw.systemupdate;
+package tecsun.cjw.systemupdate.http;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;

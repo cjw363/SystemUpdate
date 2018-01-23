@@ -4,12 +4,37 @@
 	xmlns:tools="http://schemas.android.com/tools"
 	android:layout_width="match_parent"
 	android:layout_height="match_parent"
+	android:orientation="vertical"
 	tools:context="tecsun.cjw.systemupdate.MainActivity">
 
 	<Button
+		android:id="@+id/bt_download"
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content"
-		android:text="Hello World!"
+		android:onClick="onDownload"
+		android:text="download"
 		/>
 
+	<Button
+		android:id="@+id/bt_pause"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:onClick="onPause"
+		android:text="pause"
+		/>
+
+	<Button
+		android:id="@+id/bt_cancel"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:onClick="onCancel"
+		android:text="cancel"
+		/>
+
+	<ProgressBar
+		android:id="@+id/pg_download"
+		android:layout_width="match_parent"
+		android:layout_height="20dp"
+		android:max="100"
+		style="@style/Widget.AppCompat.ProgressBar.Horizontal"/>
 </LinearLayout>
