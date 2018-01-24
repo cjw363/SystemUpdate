@@ -30,9 +30,10 @@ public class PullUpdateXmlParser {
 	public static List<SystemInfo> xmlParser(InputStream in) throws Exception {
 		List<SystemInfo> systems = null;
 		SystemInfo system = null;
+		List<String> buildfors = null;
 
 		XmlPullParser pullParser = Xml.newPullParser();// 利用ANDROID提供的API快速获得pull解析器
-		pullParser.setInput(in, "UTF-8");// 设置需要解析的XML数据
+		pullParser.setInput(in, "GB2312");// 设置需要解析的XML数据
 		int event = pullParser.getEventType(); // 取得事件
 
 		// 若为解析到末尾
@@ -44,28 +45,31 @@ public class PullUpdateXmlParser {
 					systems = new ArrayList<>();
 					break;
 				case XmlPullParser.START_TAG: // 标签开始
-					system = new SystemInfo();
 					if ("system".equals(nodeName)) {
-						String name = pullParser.getAttributeValue(0);
+						system = new SystemInfo();
+						buildfors = new ArrayList<>();
+						String name = pullParser.getAttributeValue(null, "name");
 						system.setName(name);
 					} else if ("address".equals(nodeName)) {
-						system.setAddress(pullParser.nextText());
+						if (system != null) system.setAddress(pullParser.nextText());
 					} else if ("description".equals(nodeName)) {
-						system.setDescription(pullParser.nextText());
+						if (system != null) system.setDescription(pullParser.nextText());
 					} else if ("password".equals(nodeName)) {
-						system.setPassword(pullParser.nextText());
+						if (system != null) system.setPassword(pullParser.nextText());
 					} else if ("hwsupport".equals(nodeName)) {
-						system.setHwsupport(pullParser.nextText());
+						if (system != null) system.setHwsupport(pullParser.nextText());
 					} else if ("formemory".equals(nodeName)) {
-						system.setFormemory(pullParser.nextText());
+						if (system != null) system.setFormemory(pullParser.nextText());
 					} else if ("buildfor".equals(nodeName)) {
-						system.setBuildfor(pullParser.nextText());
+						if (buildfors != null) buildfors.add(pullParser.nextText());
 					}
 					break;
 				case XmlPullParser.END_TAG: // 标签结束
 					if ("system".equals(nodeName)) {
-						if (systems != null) systems.add(system);
-						system = null;
+						if (systems != null && system != null) {
+							system.setBuildfors(buildfors);
+							systems.add(system);
+						}
 					}
 					break;
 			}
@@ -77,10 +81,11 @@ public class PullUpdateXmlParser {
 	public static SystemInfo systemUpdateXmlParser(InputStream in, String currentVersion) throws Exception {
 		SystemInfo currentSystem = null;
 		SystemInfo updateSystem = null;
-		boolean flag = false;
+		List<String> buildfors = null;
+		boolean flag = false;//是否已找到当前版本，开始查找新版本
 
 		XmlPullParser pullParser = Xml.newPullParser();// 利用ANDROID提供的API快速获得pull解析器
-		pullParser.setInput(in, "UTF-8");// 设置需要解析的XML数据
+		pullParser.setInput(in, "GB2312");// 设置需要解析的XML数据
 		int event = pullParser.getEventType(); // 取得事件
 
 		// 若为解析到末尾
@@ -92,44 +97,58 @@ public class PullUpdateXmlParser {
 					break;
 				case XmlPullParser.START_TAG: // 标签开始
 					if ("system".equals(nodeName)) {
-						String name = pullParser.getAttributeValue(0);
+						String name = pullParser.getAttributeValue(null, "name");
 						if (name.equals(currentVersion)) {
 							currentSystem = new SystemInfo();
 							currentSystem.setName(name);
 						}
 						if (flag) {
 							updateSystem = new SystemInfo();
+							buildfors = new ArrayList<>();
 							updateSystem.setName(name);
 						}
 					} else if ("address".equals(nodeName)) {
-						if (currentSystem != null) currentSystem.setAddress(pullParser.nextText());
-						if (flag && updateSystem != null) updateSystem.setAddress(pullParser.nextText());
+						String address = pullParser.nextText();
+						if (!flag && currentSystem != null) currentSystem.setAddress(address);
+						if (flag && updateSystem != null) updateSystem.setAddress(address);
 					} else if ("description".equals(nodeName)) {
-						if (currentSystem != null) currentSystem.setDescription(pullParser.nextText());
-						if (flag && updateSystem != null)
-							updateSystem.setDescription(pullParser.nextText());
+						String description = pullParser.nextText();
+						if (!flag && currentSystem != null) currentSystem.setDescription(description);
+						if (flag && updateSystem != null) updateSystem.setDescription(description);
 					} else if ("password".equals(nodeName)) {
-						if (currentSystem != null) currentSystem.setPassword(pullParser.nextText());
-						if (flag && updateSystem != null) updateSystem.setPassword(pullParser.nextText());
+						String password = pullParser.nextText();
+						if (!flag && currentSystem != null) currentSystem.setPassword(password);
+						if (flag && updateSystem != null) updateSystem.setPassword(password);
 					} else if ("hwsupport".equals(nodeName)) {
-						if (currentSystem != null) currentSystem.setHwsupport(pullParser.nextText());
-						if (flag && updateSystem != null) {
-
-						}
+						String hwsupport = pullParser.nextText();
+						if (!flag && currentSystem != null) currentSystem.setHwsupport(hwsupport);
+						if (flag && updateSystem != null) updateSystem.setHwsupport(hwsupport);
 					} else if ("formemory".equals(nodeName)) {
-						if (currentSystem != null) currentSystem.setFormemory(pullParser.nextText());
+						String formemory = pullParser.nextText();
+						if (!flag && currentSystem != null) currentSystem.setFormemory(formemory);
+						if (flag && updateSystem != null) updateSystem.setFormemory(formemory);
 					} else if ("buildfor".equals(nodeName)) {
-						if (currentSystem != null) currentSystem.setBuildfor(pullParser.nextText());
+						String buildfor = pullParser.nextText();
+						if (flag && updateSystem != null) buildfors.add(buildfor);
 					}
 					break;
 				case XmlPullParser.END_TAG: // 标签结束
 					if ("system".equals(nodeName)) {
-						if (currentSystem != null) flag = true;
+						if (!flag && currentSystem != null) flag = true;
+						if (flag && updateSystem != null) {
+							updateSystem.setBuildfors(buildfors);
+							if (("invalid").equals(updateSystem.getHwsupport()) || (!currentSystem.getFormemory().equals(updateSystem.getFormemory())) || (!updateSystem.getBuildfors().contains(currentVersion))) {
+								updateSystem = null;
+								buildfors = null;
+							} else {//成功
+								return updateSystem;
+							}
+						}
 					}
 					break;
 			}
 			event = pullParser.next(); // 下一个标签
 		}
-		return updateSystem;
+		return null;
 	}
 }

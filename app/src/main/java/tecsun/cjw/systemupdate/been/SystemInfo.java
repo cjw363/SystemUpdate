@@ -1,5 +1,7 @@
 package tecsun.cjw.systemupdate.been;
 
+import java.util.List;
+
 public class SystemInfo {
   private String name;
   private String address;
@@ -7,7 +9,7 @@ public class SystemInfo {
   private String password;
   private String hwsupport;
   private String formemory;
-  private String buildfor;
+  private List<String> buildfors;
 
   public String getName() {
     return name;
@@ -57,11 +59,11 @@ public class SystemInfo {
     this.formemory = formemory;
   }
 
-  public String getBuildfor() {
-    return buildfor;
+  public List<String> getBuildfors() {
+    return buildfors;
   }
 
-  public void setBuildfor(String buildfor) {
-    this.buildfor = buildfor;
+  public void setBuildfors(List<String> buildfor) {
+    this.buildfors = buildfor;
   }
 }

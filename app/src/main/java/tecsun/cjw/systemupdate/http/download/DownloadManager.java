@@ -91,9 +91,10 @@ public class DownloadManager {
 
 				DownloadTask downloadTask = downloadTaskMap.get(downloadInfo.url);
 				if (downloadTask != null) {
+//					OkHttpUtil.getInstance().cancel(downloadInfo.url);
 					ThreadManager.getInstance().cancel(downloadTask);
-					OkHttpUtil.getInstance().cancel(downloadInfo.url);
 				}
+				downloadTaskMap.remove(downloadInfo.url);
 				System.out.println(downloadInfo.name + "下载暂停");
 			}
 		}
@@ -111,9 +112,11 @@ public class DownloadManager {
 
 			DownloadTask downloadTask = downloadTaskMap.get(downloadInfo.url);
 			if (downloadTask != null) {
+//				OkHttpUtil.getInstance().cancel(downloadInfo.url);
 				ThreadManager.getInstance().cancel(downloadTask);
-				OkHttpUtil.getInstance().cancel(downloadInfo.url);
 			}
+			downloadTaskMap.remove(downloadInfo.url);
+			downloadInfoMap.remove(downloadInfo.url);
 
 			File file = new File(downloadInfo.filePath);// 获取文件路径
 			file.delete();// 删除文件
@@ -181,7 +184,7 @@ public class DownloadManager {
 
 					byte[] b = new byte[1024];
 					int len;
-					while ((len = in.read(b)) != -1) {
+					while (downloadInfo.currentState == STATE_DOWNLOADING && (len = in.read(b)) != -1) {
 						total += len;
 						savedFile.write(b, 0, len);
 						downloadInfo.currentPos = total;//更新下载进度
@@ -190,24 +193,28 @@ public class DownloadManager {
 					}
 					response.body().close();
 
-					if (mFile.length() == downloadInfo.contentLength) {
-						// 下载成功
-						downloadInfo.currentState = STATE_SUCCESS;
-						notifyDownloadStateChanged(downloadInfo);// 通知观察者，下载进度发生变化
+					if(downloadInfo.currentState!=STATE_PAUSE&&downloadInfo.currentState!=STATE_CANCEL){
+						if (mFile.length() == downloadInfo.contentLength) {
+							// 下载成功
+							downloadInfo.currentState = STATE_SUCCESS;
+							notifyDownloadStateChanged(downloadInfo);// 通知观察者，下载进度发生变化
 
-						System.out.println(downloadInfo.name + "下载成功");
-					} else {//下载结束的文件大小不对
-						//下载失败
-						downloadInfo.currentState = STATE_FAIL;
-						notifyDownloadStateChanged(downloadInfo);// 通知观察者，下载进度发生变化
-						delete(downloadInfo);//删除文件
-						System.out.println(downloadInfo.name + "下载失败");
+							System.out.println(downloadInfo.name + "下载成功");
+						} else {//下载结束的文件大小不对
+							//下载失败
+							downloadInfo.currentState = STATE_FAIL;
+							notifyDownloadStateChanged(downloadInfo);// 通知观察者，下载进度发生变化
+							delete(downloadInfo);//删除文件
+							System.out.println(downloadInfo.name + "下载失败");
+						}
 					}
-
 					// 下载成功，移除任务
 					downloadTaskMap.remove(downloadInfo.url);
 				}
 			} catch (Exception e) {
+				// 下载失败，移除任务
+				downloadTaskMap.remove(downloadInfo.url);
+
 				e.printStackTrace();
 				UI.showToast(e.getMessage());
 			} finally {
