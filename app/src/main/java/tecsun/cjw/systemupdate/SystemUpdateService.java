@@ -67,7 +67,7 @@ public class SystemUpdateService extends Service implements DownloadManager.Down
 			case DownloadManager.STATE_UNDO:
 				break;
 			case DownloadManager.STATE_WAITING:
-//				startForeground(1, getNotification("Downloading...", 0));
+				startForeground(1, getNotification("Downloading...", 0));
 				break;
 			case DownloadManager.STATE_DOWNLOADING:
 				float progress = (downloadInfo.currentPos / (float) DownloadManager.getInstance().getTotalContentLength());
