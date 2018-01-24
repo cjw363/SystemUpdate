@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import okhttp3.Call;
@@ -45,7 +47,6 @@ public class DownloadManager {
 	public synchronized void download(final DownloadInfo downloadInfo) {
 		downloadInfo.currentState = STATE_WAITING;// 切换为等待下载
 		notifyDownloadStateChanged(downloadInfo);// 通知所有观察者，下载状态改变
-		//		SPUtils.saveDownloadInfo(downloadInfo.song_id, downloadInfo);// 本地存储downloadInfo的信息
 
 		OkHttpUtil.getInstance().doHttp(downloadInfo.url, new Callback() {//获取contentLength
 			@Override
@@ -58,7 +59,7 @@ public class DownloadManager {
 					}
 					// 获取资源大小
 					downloadInfo.contentLength = response.body().contentLength();
-					System.out.println("downloadInfo.contentLength-" + downloadInfo.contentLength);
+					System.out.println(downloadInfo.name + "-downloadInfo.contentLength-" + downloadInfo.contentLength);
 
 					DownloadTask downloadTask = new DownloadTask(downloadInfo);
 					ThreadManager.getInstance().execute(downloadTask);// 开始下载
@@ -91,7 +92,7 @@ public class DownloadManager {
 
 				DownloadTask downloadTask = downloadTaskMap.get(downloadInfo.url);
 				if (downloadTask != null) {
-//					OkHttpUtil.getInstance().cancel(downloadInfo.url);
+					//					OkHttpUtil.getInstance().cancel(downloadInfo.url);
 					ThreadManager.getInstance().cancel(downloadTask);
 				}
 				downloadTaskMap.remove(downloadInfo.url);
@@ -112,7 +113,7 @@ public class DownloadManager {
 
 			DownloadTask downloadTask = downloadTaskMap.get(downloadInfo.url);
 			if (downloadTask != null) {
-//				OkHttpUtil.getInstance().cancel(downloadInfo.url);
+				//				OkHttpUtil.getInstance().cancel(downloadInfo.url);
 				ThreadManager.getInstance().cancel(downloadTask);
 			}
 			downloadTaskMap.remove(downloadInfo.url);
@@ -193,7 +194,7 @@ public class DownloadManager {
 					}
 					response.body().close();
 
-					if(downloadInfo.currentState!=STATE_PAUSE&&downloadInfo.currentState!=STATE_CANCEL){
+					if (downloadInfo.currentState != STATE_PAUSE && downloadInfo.currentState != STATE_CANCEL) {
 						if (mFile.length() == downloadInfo.contentLength) {
 							// 下载成功
 							downloadInfo.currentState = STATE_SUCCESS;
@@ -299,5 +300,20 @@ public class DownloadManager {
 	public boolean hasDownloadTask(String url) {
 		if (downloadTaskMap.get(url) != null) return true;
 		else return false;
+	}
+
+	public synchronized ConcurrentHashMap<String, DownloadInfo> getDownloadInfoMap() {
+		return downloadInfoMap;
+	}
+
+	public Long getTotalContentLength() {
+		Iterator iter = downloadInfoMap.entrySet().iterator();
+		long total = 0;
+		while (iter.hasNext()) {
+			Map.Entry entry = (Map.Entry) iter.next();
+			DownloadInfo downloadInfo = (DownloadInfo) entry.getValue();
+			total += downloadInfo.contentLength;
+		}
+		return total;
 	}
 }
