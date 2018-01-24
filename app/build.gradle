@@ -31,5 +31,7 @@ dependencies {
     apt 'com.jakewharton:butterknife-compiler:8.2.1'
 
     compile 'com.squareup.okhttp3:okhttp:3.6.0'
+
+    compile 'org.greenrobot:eventbus:3.0.0'
     testCompile 'junit:junit:4.12'
 }

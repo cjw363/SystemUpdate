@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import okhttp3.Call;
@@ -45,7 +47,6 @@ public class DownloadManager {
 	public synchronized void download(final DownloadInfo downloadInfo) {
 		downloadInfo.currentState = STATE_WAITING;// 切换为等待下载
 		notifyDownloadStateChanged(downloadInfo);// 通知所有观察者，下载状态改变
-		//		SPUtils.saveDownloadInfo(downloadInfo.song_id, downloadInfo);// 本地存储downloadInfo的信息
 
 		OkHttpUtil.getInstance().doHttp(downloadInfo.url, new Callback() {//获取contentLength
 			@Override
@@ -58,7 +59,7 @@ public class DownloadManager {
 					}
 					// 获取资源大小
 					downloadInfo.contentLength = response.body().contentLength();
-					System.out.println("downloadInfo.contentLength-" + downloadInfo.contentLength);
+					System.out.println(downloadInfo.name + "-downloadInfo.contentLength-" + downloadInfo.contentLength);
 
 					DownloadTask downloadTask = new DownloadTask(downloadInfo);
 					ThreadManager.getInstance().execute(downloadTask);// 开始下载
@@ -91,9 +92,10 @@ public class DownloadManager {
 
 				DownloadTask downloadTask = downloadTaskMap.get(downloadInfo.url);
 				if (downloadTask != null) {
+					//					OkHttpUtil.getInstance().cancel(downloadInfo.url);
 					ThreadManager.getInstance().cancel(downloadTask);
-					OkHttpUtil.getInstance().cancel(downloadInfo.url);
 				}
+				downloadTaskMap.remove(downloadInfo.url);
 				System.out.println(downloadInfo.name + "下载暂停");
 			}
 		}
@@ -111,9 +113,11 @@ public class DownloadManager {
 
 			DownloadTask downloadTask = downloadTaskMap.get(downloadInfo.url);
 			if (downloadTask != null) {
+				//				OkHttpUtil.getInstance().cancel(downloadInfo.url);
 				ThreadManager.getInstance().cancel(downloadTask);
-				OkHttpUtil.getInstance().cancel(downloadInfo.url);
 			}
+			downloadTaskMap.remove(downloadInfo.url);
+			downloadInfoMap.remove(downloadInfo.url);
 
 			File file = new File(downloadInfo.filePath);// 获取文件路径
 			file.delete();// 删除文件
@@ -181,7 +185,7 @@ public class DownloadManager {
 
 					byte[] b = new byte[1024];
 					int len;
-					while ((len = in.read(b)) != -1) {
+					while (downloadInfo.currentState == STATE_DOWNLOADING && (len = in.read(b)) != -1) {
 						total += len;
 						savedFile.write(b, 0, len);
 						downloadInfo.currentPos = total;//更新下载进度
@@ -190,24 +194,28 @@ public class DownloadManager {
 					}
 					response.body().close();
 
-					if (mFile.length() == downloadInfo.contentLength) {
-						// 下载成功
-						downloadInfo.currentState = STATE_SUCCESS;
-						notifyDownloadStateChanged(downloadInfo);// 通知观察者，下载进度发生变化
+					if (downloadInfo.currentState != STATE_PAUSE && downloadInfo.currentState != STATE_CANCEL) {
+						if (mFile.length() == downloadInfo.contentLength) {
+							// 下载成功
+							downloadInfo.currentState = STATE_SUCCESS;
+							notifyDownloadStateChanged(downloadInfo);// 通知观察者，下载进度发生变化
 
-						System.out.println(downloadInfo.name + "下载成功");
-					} else {//下载结束的文件大小不对
-						//下载失败
-						downloadInfo.currentState = STATE_FAIL;
-						notifyDownloadStateChanged(downloadInfo);// 通知观察者，下载进度发生变化
-						delete(downloadInfo);//删除文件
-						System.out.println(downloadInfo.name + "下载失败");
+							System.out.println(downloadInfo.name + "下载成功");
+						} else {//下载结束的文件大小不对
+							//下载失败
+							downloadInfo.currentState = STATE_FAIL;
+							notifyDownloadStateChanged(downloadInfo);// 通知观察者，下载进度发生变化
+							delete(downloadInfo);//删除文件
+							System.out.println(downloadInfo.name + "下载失败");
+						}
 					}
-
 					// 下载成功，移除任务
 					downloadTaskMap.remove(downloadInfo.url);
 				}
 			} catch (Exception e) {
+				// 下载失败，移除任务
+				downloadTaskMap.remove(downloadInfo.url);
+
 				e.printStackTrace();
 				UI.showToast(e.getMessage());
 			} finally {
@@ -292,5 +300,20 @@ public class DownloadManager {
 	public boolean hasDownloadTask(String url) {
 		if (downloadTaskMap.get(url) != null) return true;
 		else return false;
+	}
+
+	public synchronized ConcurrentHashMap<String, DownloadInfo> getDownloadInfoMap() {
+		return downloadInfoMap;
+	}
+
+	public Long getTotalContentLength() {
+		Iterator iter = downloadInfoMap.entrySet().iterator();
+		long total = 0;
+		while (iter.hasNext()) {
+			Map.Entry entry = (Map.Entry) iter.next();
+			DownloadInfo downloadInfo = (DownloadInfo) entry.getValue();
+			total += downloadInfo.contentLength;
+		}
+		return total;
 	}
 }
