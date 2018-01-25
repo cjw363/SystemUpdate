@@ -71,6 +71,9 @@ public class DownloadManager {
 
 					response.body().close();
 				} catch (Exception e) {
+//					if(e.getCause() instanceof ConnectException || e instanceof SocketTimeoutException || e instanceof SocketException){
+//
+//					}
 					e.printStackTrace();
 					UI.showToast("下载出错-" + e.getMessage());
 				}
@@ -193,7 +196,7 @@ public class DownloadManager {
 						total += len;
 						savedFile.write(b, 0, len);
 						downloadInfo.currentPos = total;//更新下载进度
-//						System.out.println(total);
+						//						System.out.println(total);
 						notifyDownloadStateChanged(downloadInfo);// 通知观察者，下载进度发生变化
 					}
 					response.body().close();

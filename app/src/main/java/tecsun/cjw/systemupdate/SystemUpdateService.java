@@ -120,7 +120,7 @@ public class SystemUpdateService extends Service implements DownloadManager.Down
 				break;
 			case DownloadManager.STATE_SUCCESS:
 				System.out.println("一个下载好了");
-				if (checkIsAllDownloaded(mDownloads)){//所有下载任务已完成
+				if (checkIsAllDownloaded(mDownloads)) {//所有下载任务已完成
 					getNotificationManager().notify(1, getNotification("下载成功...", 0).build());
 					PowerManager pManager = (PowerManager) getSystemService(Context.POWER_SERVICE); //重启到fastboot模式
 					pManager.reboot("recovery");
@@ -143,7 +143,7 @@ public class SystemUpdateService extends Service implements DownloadManager.Down
 	private void checkSystemUpdate() {
 		OkHttpUtil.getInstance().doHttp(BaseApplication.systemUpdateUrl, new Callback() {
 			@Override
-			public void onResponse(Call call, Response response) throws IOException {
+			public void onResponse(Call call, Response response) {
 				try {
 					List<SystemModel> systemModels = new SaxUpdateXmlParser().parse(SystemUpdateService.this, response.body().byteStream());
 					String currVersion = android.os.Build.DISPLAY;

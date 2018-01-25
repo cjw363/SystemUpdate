@@ -57,7 +57,7 @@ public class MainActivity extends AppCompatActivity implements DownloadManager.D
 	private void checkSystemUpdate() {
 		OkHttpUtil.getInstance().doHttp(BaseApplication.systemUpdateUrl, new Callback() {
 			@Override
-			public void onResponse(Call call, Response response) throws IOException {
+			public void onResponse(Call call, Response response) throws IOException{
 				try {
 					List<SystemModel> systemModels = new SaxUpdateXmlParser().parse(MainActivity.this, response.body().byteStream());
 					String currVersion = Build.DISPLAY;
@@ -65,18 +65,12 @@ public class MainActivity extends AppCompatActivity implements DownloadManager.D
 						if (currVersion.equals(system.getName())) {
 							List<SystemModel.Target> targetList = system.getTagetList();
 							if (targetList != null && targetList.size() > 0) {
-								final SystemModel.Target target = targetList.get(0);//取第一个
-								UI.runOnUIThread(new Runnable() {
-									@Override
-									public void run() {
-										showNewSystemUpdate(target);
-									}
-								});
+								SystemModel.Target target = targetList.get(0);//取第一个
+								showNewSystemUpdate(target);
 								return;
 							} else {
 								//暂无更新版本
-								mTvVersionName.setText(currVersion);
-								mTvTip.setText("(暂无新版本)");
+								showNonSystemUpdate();
 							}
 						}
 					}
@@ -93,17 +87,32 @@ public class MainActivity extends AppCompatActivity implements DownloadManager.D
 		});
 	}
 
-	private void showNewSystemUpdate(SystemModel.Target target) {
-		System.out.println("发现新版本" + target.getName());
-		mTvVersionName.setText(target.getName());
-		mTvTip.setText("(发现新版本)");
-		mTvVersionDescription.setText(target.getDescription());
+	private void showNonSystemUpdate() {
+		UI.runOnUIThread(new Runnable() {
+			@Override
+			public void run() {
+				mTvVersionName.setText(Build.DISPLAY);
+				mTvTip.setText("(暂无新版本)");
+			}
+		});
+	}
 
-		mTarget=target;
+	private void showNewSystemUpdate(final SystemModel.Target target) {
+		System.out.println("发现新版本" + target.getName());
+		UI.runOnUIThread(new Runnable() {
+			@Override
+			public void run() {
+				mTvVersionName.setText(target.getName());
+				mTvTip.setText("(发现新版本)");
+				mTvVersionDescription.setText(target.getDescription());
+			}
+		});
+
+		mTarget = target;
 	}
 
 	public void onDownload(View v) {
-		if(mTarget!=null){
+		if (mTarget != null) {
 			Intent intent = new Intent(MainActivity.this, SystemUpdateService.class);
 			intent.setAction(SystemUpdateService.INTENT_ACTION_SYSTEM_DOWNLOAD);
 			intent.putExtra("target", mTarget);
