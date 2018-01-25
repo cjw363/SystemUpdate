@@ -15,7 +15,14 @@
 			android:id="@+id/tv_version_name"
 			style="@style/tv_normal"
 			android:layout_centerInParent="true"
-			android:text=""/>
+			/>
+
+		<TextView
+			android:id="@+id/tv_tip"
+			android:layout_below="@id/tv_version_name"
+			android:layout_centerHorizontal="true"
+			style="@style/tv_hint"
+			/>
 
 		<View
 			style="@style/view_divider_1"

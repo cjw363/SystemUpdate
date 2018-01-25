@@ -6,7 +6,9 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.BitmapFactory;
+import android.os.Environment;
 import android.os.IBinder;
+import android.os.PowerManager;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
 
@@ -15,6 +17,7 @@ import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import okhttp3.Call;
@@ -37,9 +40,9 @@ public class SystemUpdateService extends Service implements DownloadManager.Down
 	public static final String INTENT_ACTION_CHECK_SYSTEM_UPDATE = "intent.action.CHECK_SYSTEM_UPDATE";
 	public static final String INTENT_ACTION_SYSTEM_DOWNLOAD = "intent.action.SYSTEM_DOWNLOAD";
 
-	private DownloadInfo mDownloadInfo = null;
 	private NotificationCompat.Builder mNotifBuilder;
 	private int preProgress = 0;//用来记录之前的下载进度，总进度为100，如果相同则不需要频繁更新，避免卡顿
+	private List<DownloadInfo> mDownloads;
 
 	@Override
 	public void onCreate() {
@@ -56,26 +59,38 @@ public class SystemUpdateService extends Service implements DownloadManager.Down
 			if (INTENT_ACTION_CHECK_SYSTEM_UPDATE.equals(action)) {//接受的是检查更新命令
 				checkSystemUpdate();
 			} else if (INTENT_ACTION_SYSTEM_DOWNLOAD.equals(action)) {//接受的是下载命令
-				mDownloadInfo = (DownloadInfo) intent.getSerializableExtra("download_info");
-				if (mDownloadInfo != null)
-					if (!DownloadManager.getInstance().hasDownloadTask(mDownloadInfo.url))//当前没有此下载任务
-						DownloadManager.getInstance().download(mDownloadInfo);
+				SystemModel.Target target = (SystemModel.Target) intent.getSerializableExtra("target");
+				if (target != null) {
+					//下载任务列表
+					mDownloads = new ArrayList<>();
+					mDownloads.add(createDownloadInfo(BaseApplication.command, target.getAddr(), Environment.getDownloadCacheDirectory().toString() + "/recovery/"));///recovery/
+					mDownloads.add(createDownloadInfo(BaseApplication.updateZip, target.getAddr(), Environment.getDownloadCacheDirectory().toString() + "/"));
+					DownloadManager.getInstance().download(mDownloads);
+				}
 			}
 		}
 		return super.onStartCommand(intent, flags, startId);
+	}
+
+	public DownloadInfo createDownloadInfo(String name, String url, String path) {
+		DownloadInfo downloadInfo = new DownloadInfo();
+		downloadInfo.name = name;
+		downloadInfo.url = url + name;
+		downloadInfo.filePath = path + downloadInfo.name;
+		return downloadInfo;
 	}
 
 	@Subscribe(threadMode = ThreadMode.MAIN)
 	public void onEvent(DownloadEvent event) {
 		switch (event.what) {
 			case EVENT_DOWNLOAD_1:
-				if (mDownloadInfo != null) DownloadManager.getInstance().download(mDownloadInfo);
+				if (mDownloads != null) DownloadManager.getInstance().download(mDownloads);
 				break;
 			case EVENT_PAUSE_2:
-				if (mDownloadInfo != null) DownloadManager.getInstance().pause(mDownloadInfo);
+				if (mDownloads != null) DownloadManager.getInstance().pause(mDownloads);
 				break;
 			case EVENT_CANCEL_3:
-				if (mDownloadInfo != null) DownloadManager.getInstance().cancel(mDownloadInfo);
+				if (mDownloads != null) DownloadManager.getInstance().cancel(mDownloads);
 				break;
 		}
 	}
@@ -92,6 +107,7 @@ public class SystemUpdateService extends Service implements DownloadManager.Down
 				float progress = (downloadInfo.currentPos / (float) DownloadManager.getInstance().getTotalContentLength());
 				int currProgress = (int) (progress * 100);
 				if (preProgress < currProgress) {
+					System.out.println(currProgress);
 					getNotificationManager().notify(1, getNotification("下载中...", currProgress).build());
 				}
 				preProgress = currProgress;
@@ -103,12 +119,25 @@ public class SystemUpdateService extends Service implements DownloadManager.Down
 				getNotificationManager().notify(1, getNotification("下载失败...", 0).build());
 				break;
 			case DownloadManager.STATE_SUCCESS:
-				getNotificationManager().notify(1, getNotification("下载成功...", 0).build());
+				System.out.println("一个下载好了");
+				if (checkIsAllDownloaded(mDownloads)){//所有下载任务已完成
+					getNotificationManager().notify(1, getNotification("下载成功...", 0).build());
+					PowerManager pManager = (PowerManager) getSystemService(Context.POWER_SERVICE); //重启到fastboot模式
+					pManager.reboot("recovery");
+				}
 				break;
 			case DownloadManager.STATE_CANCEL:
 				getNotificationManager().cancel(1);
 				break;
 		}
+	}
+
+	private boolean checkIsAllDownloaded(List<DownloadInfo> downloads) {
+		if (downloads == null || downloads.isEmpty()) return false;
+		for (DownloadInfo downloadInfo : downloads) {
+			if (downloadInfo.currentState != DownloadManager.STATE_SUCCESS) return false;
+		}
+		return true;
 	}
 
 	private void checkSystemUpdate() {

@@ -1,10 +1,11 @@
 package tecsun.cjw.systemupdate.utils.xml;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 
-public class SystemModel {
+public class SystemModel implements Serializable{
 	private String name;
 	private String addr;
 	private String description;
@@ -79,7 +80,7 @@ public class SystemModel {
 	}
 	
 	
-	public class Target{
+	public class Target implements Serializable{
 		private String name;
 		private String addr;
 		private String description;

@@ -3,7 +3,6 @@ package tecsun.cjw.systemupdate;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.ProgressBar;
@@ -33,18 +32,17 @@ import static tecsun.cjw.systemupdate.base.DownloadEvent.EVENT_PAUSE_2;
 
 public class MainActivity extends AppCompatActivity implements DownloadManager.DownloadObserver {
 
-	private static String command = "command";
-	private static String updateZip = "update.zip";
-
 	@BindView(R.id.pg_download)
 	ProgressBar mPgDownload;
 	@BindView(R.id.tv_version_name)
 	TextView mTvVersionName;
+	@BindView(R.id.tv_tip)
+	TextView mTvTip;
 	@BindView(R.id.tv_version_description)
 	TextView mTvVersionDescription;
 
-	private DownloadInfo mDownloadInfo;
 	private int preProgress = 0;//用来记录之前的下载进度，总进度为100，如果相同则不需要频繁更新，避免卡顿
+	private SystemModel.Target mTarget;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -77,6 +75,8 @@ public class MainActivity extends AppCompatActivity implements DownloadManager.D
 								return;
 							} else {
 								//暂无更新版本
+								mTvVersionName.setText(currVersion);
+								mTvTip.setText("(暂无新版本)");
 							}
 						}
 					}
@@ -96,19 +96,19 @@ public class MainActivity extends AppCompatActivity implements DownloadManager.D
 	private void showNewSystemUpdate(SystemModel.Target target) {
 		System.out.println("发现新版本" + target.getName());
 		mTvVersionName.setText(target.getName());
+		mTvTip.setText("(发现新版本)");
 		mTvVersionDescription.setText(target.getDescription());
 
-		mDownloadInfo = new DownloadInfo();
-		mDownloadInfo.name = updateZip;
-		mDownloadInfo.url = target.getAddr() + mDownloadInfo.name;
-		mDownloadInfo.filePath = Environment.getDownloadCacheDirectory().toString() + "/" + mDownloadInfo.name;
+		mTarget=target;
 	}
 
 	public void onDownload(View v) {
-		Intent intent = new Intent(MainActivity.this, SystemUpdateService.class);
-		intent.setAction(SystemUpdateService.INTENT_ACTION_SYSTEM_DOWNLOAD);
-		intent.putExtra("download_info", mDownloadInfo);
-		startService(intent);
+		if(mTarget!=null){
+			Intent intent = new Intent(MainActivity.this, SystemUpdateService.class);
+			intent.setAction(SystemUpdateService.INTENT_ACTION_SYSTEM_DOWNLOAD);
+			intent.putExtra("target", mTarget);
+			startService(intent);
+		}
 	}
 
 	public void onPause(View v) {
