@@ -8,4 +8,38 @@
 		<item name="colorAccent">@color/colorAccent</item>
 	</style>
 
+
+	<style name="view_divider_1">
+		<item name="android:layout_width">match_parent</item>
+		<item name="android:layout_height">1dp</item>
+		<item name="android:background">@color/divider</item>
+	</style>
+
+	<style name="view_divider_2">
+		<item name="android:layout_width">match_parent</item>
+		<item name="android:layout_height">1dp</item>
+		<item name="android:layout_marginStart">10dp</item>
+		<item name="android:layout_marginEnd">10dp</item>
+		<item name="android:background">@color/divider</item>
+	</style>
+
+	<style name="view_divider_3">
+		<item name="android:layout_width">match_parent</item>
+		<item name="android:layout_height">15dp</item>
+		<item name="android:background">@color/bg_label</item>
+	</style>
+
+	<style name="tv_normal">
+		<item name="android:layout_width">wrap_content</item>
+		<item name="android:layout_height">wrap_content</item>
+		<item name="android:textSize">16sp</item>
+		<item name="android:textColor">@color/tv_colorPrimary</item>
+	</style>
+	<style name="tv_hint">
+		<item name="android:layout_width">wrap_content</item>
+		<item name="android:layout_height">wrap_content</item>
+		<item name="android:textSize">16sp</item>
+		<item name="android:textColor">@color/tv_colorPrimaryHint</item>
+	</style>
+
 </resources>

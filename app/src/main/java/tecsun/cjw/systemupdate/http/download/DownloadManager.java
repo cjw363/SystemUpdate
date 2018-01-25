@@ -183,7 +183,7 @@ public class DownloadManager {
 					long total = savedFile.length();
 					savedFile.seek(total);//跳过已经下载的字节
 
-					byte[] b = new byte[1024];
+					byte[] b = new byte[1024<<2];
 					int len;
 					while (downloadInfo.currentState == STATE_DOWNLOADING && (len = in.read(b)) != -1) {
 						total += len;
@@ -306,7 +306,7 @@ public class DownloadManager {
 		return downloadInfoMap;
 	}
 
-	public Long getTotalContentLength() {
+	public synchronized Long getTotalContentLength() {
 		Iterator iter = downloadInfoMap.entrySet().iterator();
 		long total = 0;
 		while (iter.hasNext()) {
