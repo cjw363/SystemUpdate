@@ -8,6 +8,9 @@ import android.os.Handler;
 import java.util.Stack;
 
 public class BaseApplication extends Application {
+	public static String systemUpdateUrl = "http://cpzx.e-tecsun.com:8037/update/TA/update_cjw.xml";
+	public static String command = "command";
+	public static String updateZip = "update.zip";
 	private static Context context;
 	private static Handler handler;
 	private static int mainThreadId;

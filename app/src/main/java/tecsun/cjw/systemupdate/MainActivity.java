@@ -1,11 +1,12 @@
 package tecsun.cjw.systemupdate;
 
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 
 import org.greenrobot.eventbus.EventBus;
 
@@ -17,10 +18,12 @@ import butterknife.ButterKnife;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.Response;
+import tecsun.cjw.systemupdate.base.BaseApplication;
 import tecsun.cjw.systemupdate.base.DownloadEvent;
 import tecsun.cjw.systemupdate.been.DownloadInfo;
 import tecsun.cjw.systemupdate.http.OkHttpUtil;
 import tecsun.cjw.systemupdate.http.download.DownloadManager;
+import tecsun.cjw.systemupdate.utils.UI;
 import tecsun.cjw.systemupdate.utils.xml.SaxUpdateXmlParser;
 import tecsun.cjw.systemupdate.utils.xml.SystemModel;
 
@@ -29,13 +32,17 @@ import static tecsun.cjw.systemupdate.base.DownloadEvent.EVENT_PAUSE_2;
 
 public class MainActivity extends AppCompatActivity implements DownloadManager.DownloadObserver {
 
-	private static String systemUpdateUrl = "http://cpzx.e-tecsun.com:8037/update/TA/update_cjw.xml";
-	private static String command = "command";
-	private static String updateZip = "update.zip";
-
 	@BindView(R.id.pg_download)
 	ProgressBar mPgDownload;
-	private DownloadInfo mDownloadInfo;
+	@BindView(R.id.tv_version_name)
+	TextView mTvVersionName;
+	@BindView(R.id.tv_tip)
+	TextView mTvTip;
+	@BindView(R.id.tv_version_description)
+	TextView mTvVersionDescription;
+
+	private int preProgress = 0;//用来记录之前的下载进度，总进度为100，如果相同则不需要频繁更新，避免卡顿
+	private SystemModel.Target mTarget;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -48,12 +55,12 @@ public class MainActivity extends AppCompatActivity implements DownloadManager.D
 	}
 
 	private void checkSystemUpdate() {
-		OkHttpUtil.getInstance().doHttp(systemUpdateUrl, new Callback() {
+		OkHttpUtil.getInstance().doHttp(BaseApplication.systemUpdateUrl, new Callback() {
 			@Override
-			public void onResponse(Call call, Response response) throws IOException {
+			public void onResponse(Call call, Response response) throws IOException{
 				try {
 					List<SystemModel> systemModels = new SaxUpdateXmlParser().parse(MainActivity.this, response.body().byteStream());
-					String currVersion = android.os.Build.DISPLAY;
+					String currVersion = Build.DISPLAY;
 					for (SystemModel system : systemModels) {
 						if (currVersion.equals(system.getName())) {
 							List<SystemModel.Target> targetList = system.getTagetList();
@@ -63,6 +70,7 @@ public class MainActivity extends AppCompatActivity implements DownloadManager.D
 								return;
 							} else {
 								//暂无更新版本
+								showNonSystemUpdate();
 							}
 						}
 					}
@@ -79,18 +87,37 @@ public class MainActivity extends AppCompatActivity implements DownloadManager.D
 		});
 	}
 
-	private void showNewSystemUpdate(SystemModel.Target target) {
+	private void showNonSystemUpdate() {
+		UI.runOnUIThread(new Runnable() {
+			@Override
+			public void run() {
+				mTvVersionName.setText(Build.DISPLAY);
+				mTvTip.setText("(暂无新版本)");
+			}
+		});
+	}
+
+	private void showNewSystemUpdate(final SystemModel.Target target) {
 		System.out.println("发现新版本" + target.getName());
-		mDownloadInfo = new DownloadInfo();
-		mDownloadInfo.name = updateZip;
-		mDownloadInfo.url = target.getAddr() + mDownloadInfo.name;
-		mDownloadInfo.filePath = Environment.getDownloadCacheDirectory().toString() + "/" + mDownloadInfo.name;
+		UI.runOnUIThread(new Runnable() {
+			@Override
+			public void run() {
+				mTvVersionName.setText(target.getName());
+				mTvTip.setText("(发现新版本)");
+				mTvVersionDescription.setText(target.getDescription());
+			}
+		});
+
+		mTarget = target;
 	}
 
 	public void onDownload(View v) {
-		Intent intent = new Intent(MainActivity.this, SystemUpdateService.class);
-		intent.putExtra("download_info", mDownloadInfo);
-		startService(intent);
+		if (mTarget != null) {
+			Intent intent = new Intent(MainActivity.this, SystemUpdateService.class);
+			intent.setAction(SystemUpdateService.INTENT_ACTION_SYSTEM_DOWNLOAD);
+			intent.putExtra("target", mTarget);
+			startService(intent);
+		}
 	}
 
 	public void onPause(View v) {
@@ -110,7 +137,11 @@ public class MainActivity extends AppCompatActivity implements DownloadManager.D
 				break;
 			case DownloadManager.STATE_DOWNLOADING:
 				float progress = (downloadInfo.currentPos / (float) DownloadManager.getInstance().getTotalContentLength());
-				mPgDownload.setProgress((int) (progress * 100));
+				int currProgress = (int) (progress * 100);
+				if (preProgress < currProgress) {
+					mPgDownload.setProgress((int) (progress * 100));
+				}
+				preProgress = currProgress;
 				break;
 			case DownloadManager.STATE_PAUSE:
 				break;

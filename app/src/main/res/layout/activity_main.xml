@@ -1,40 +1,101 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
+<RelativeLayout
 	xmlns:android="http://schemas.android.com/apk/res/android"
 	xmlns:tools="http://schemas.android.com/tools"
 	android:layout_width="match_parent"
 	android:layout_height="match_parent"
-	android:orientation="vertical"
 	tools:context="tecsun.cjw.systemupdate.MainActivity">
 
-	<Button
-		android:id="@+id/bt_download"
-		android:layout_width="wrap_content"
-		android:layout_height="wrap_content"
-		android:onClick="onDownload"
-		android:text="download"
-		/>
-
-	<Button
-		android:id="@+id/bt_pause"
-		android:layout_width="wrap_content"
-		android:layout_height="wrap_content"
-		android:onClick="onPause"
-		android:text="pause"
-		/>
-
-	<Button
-		android:id="@+id/bt_cancel"
-		android:layout_width="wrap_content"
-		android:layout_height="wrap_content"
-		android:onClick="onCancel"
-		android:text="cancel"
-		/>
-
-	<ProgressBar
-		android:id="@+id/pg_download"
-		style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+	<RelativeLayout
+		android:id="@+id/rl_title"
 		android:layout_width="match_parent"
-		android:layout_height="20dp"
-		android:max="100"/>
-</LinearLayout>
+		android:layout_height="100dp">
+
+		<TextView
+			android:id="@+id/tv_version_name"
+			style="@style/tv_normal"
+			android:layout_centerInParent="true"
+			/>
+
+		<TextView
+			android:id="@+id/tv_tip"
+			android:layout_below="@id/tv_version_name"
+			android:layout_centerHorizontal="true"
+			style="@style/tv_hint"
+			/>
+
+		<View
+			style="@style/view_divider_1"
+			android:layout_alignParentBottom="true"/>
+	</RelativeLayout>
+
+	<LinearLayout
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:layout_below="@id/rl_title"
+		android:orientation="vertical"
+		android:padding="30dp">
+
+		<TextView
+			android:id="@+id/tv_version_description"
+			style="@style/tv_normal"
+			android:layout_gravity="center_horizontal"
+			/>
+	</LinearLayout>
+
+	<RelativeLayout
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:layout_alignParentBottom="true"
+		>
+
+		<View
+			style="@style/view_divider_1"
+			android:layout_alignParentTop="true"/>
+
+		<ProgressBar
+			android:id="@+id/pg_download"
+			style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+			android:layout_width="match_parent"
+			android:layout_height="30dp"
+			android:layout_centerInParent="true"
+			android:background="#f00"
+			android:layout_marginStart="20dp"
+			android:layout_marginEnd="20dp"
+			android:layout_marginTop="40dp"
+			android:layout_marginBottom="40dp"
+			android:max="100"/>
+
+		<LinearLayout
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_centerInParent="true"
+			android:orientation="horizontal">
+
+			<Button
+				android:id="@+id/bt_download"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:onClick="onDownload"
+				android:text="download"
+				/>
+
+			<Button
+				android:id="@+id/bt_pause"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:onClick="onPause"
+				android:text="pause"
+				/>
+
+			<Button
+				android:id="@+id/bt_cancel"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:onClick="onCancel"
+				android:text="cancel"
+				/>
+		</LinearLayout>
+
+	</RelativeLayout>
+</RelativeLayout>

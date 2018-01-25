@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -29,8 +30,8 @@ public class DownloadManager {
 	// 被观察者-观察者 1对多
 
 	// 观察者集合
-	private ArrayList<DownloadObserver> observerList = new ArrayList<DownloadObserver>();
-	// downloadInfo对象集合
+	private ArrayList<DownloadObserver> observerList = new ArrayList<>();
+	// downloadInfo对象集合，相当于下载任务列表
 	private ConcurrentHashMap<String, DownloadInfo> downloadInfoMap = new ConcurrentHashMap<>();
 	// 线程对象集合
 	private ConcurrentHashMap<String, DownloadTask> downloadTaskMap = new ConcurrentHashMap<>();
@@ -61,13 +62,18 @@ public class DownloadManager {
 					downloadInfo.contentLength = response.body().contentLength();
 					System.out.println(downloadInfo.name + "-downloadInfo.contentLength-" + downloadInfo.contentLength);
 
-					DownloadTask downloadTask = new DownloadTask(downloadInfo);
-					ThreadManager.getInstance().execute(downloadTask);// 开始下载
-					downloadInfoMap.put(downloadInfo.url, downloadInfo);// 添加到下载对象集合里面
-					downloadTaskMap.put(downloadInfo.url, downloadTask);// 添加到下载线程集合里面
+					if (!hasDownloadTask(downloadInfo.url)) {//当前没有此下载任务
+						DownloadTask downloadTask = new DownloadTask(downloadInfo);
+						ThreadManager.getInstance().execute(downloadTask);// 开始下载
+						downloadInfoMap.put(downloadInfo.url, downloadInfo);// 添加到下载对象集合里面
+						downloadTaskMap.put(downloadInfo.url, downloadTask);// 添加到下载线程集合里面
+					}
 
 					response.body().close();
 				} catch (Exception e) {
+//					if(e.getCause() instanceof ConnectException || e instanceof SocketTimeoutException || e instanceof SocketException){
+//
+//					}
 					e.printStackTrace();
 					UI.showToast("下载出错-" + e.getMessage());
 				}
@@ -92,7 +98,7 @@ public class DownloadManager {
 
 				DownloadTask downloadTask = downloadTaskMap.get(downloadInfo.url);
 				if (downloadTask != null) {
-					//					OkHttpUtil.getInstance().cancel(downloadInfo.url);
+					//					OkHttpUtil.getInstance().cancel(downloadInfo.url);//会报warn
 					ThreadManager.getInstance().cancel(downloadTask);
 				}
 				downloadTaskMap.remove(downloadInfo.url);
@@ -113,7 +119,7 @@ public class DownloadManager {
 
 			DownloadTask downloadTask = downloadTaskMap.get(downloadInfo.url);
 			if (downloadTask != null) {
-				//				OkHttpUtil.getInstance().cancel(downloadInfo.url);
+				//				OkHttpUtil.getInstance().cancel(downloadInfo.url);//会报warn
 				ThreadManager.getInstance().cancel(downloadTask);
 			}
 			downloadTaskMap.remove(downloadInfo.url);
@@ -147,9 +153,10 @@ public class DownloadManager {
 				downloadLength = file.length();//得到下载内容的大小
 				if (contentLength == downloadLength) {
 					downloadInfo.currentState = STATE_SUCCESS;
+					notifyDownloadStateChanged(downloadInfo);// 通知所有观察者，下载状态改变
 					//// TODO: 2018/1/23 0023  测试
-					file.delete();
-					OkHttpUtil.getInstance().downloadFileByRange(downloadInfo.url, 0, contentLength, downloadCallback);
+					//					file.delete();
+					//					OkHttpUtil.getInstance().downloadFileByRange(downloadInfo.url, 0, contentLength, downloadCallback);
 				} else {//断点续传
 					OkHttpUtil.getInstance().downloadFileByRange(downloadInfo.url, downloadLength, contentLength, downloadCallback);
 				}
@@ -183,13 +190,13 @@ public class DownloadManager {
 					long total = savedFile.length();
 					savedFile.seek(total);//跳过已经下载的字节
 
-					byte[] b = new byte[1024];
+					byte[] b = new byte[1024 << 2];
 					int len;
 					while (downloadInfo.currentState == STATE_DOWNLOADING && (len = in.read(b)) != -1) {
 						total += len;
 						savedFile.write(b, 0, len);
 						downloadInfo.currentPos = total;//更新下载进度
-						System.out.println(total);
+						//						System.out.println(total);
 						notifyDownloadStateChanged(downloadInfo);// 通知观察者，下载进度发生变化
 					}
 					response.body().close();
@@ -294,16 +301,20 @@ public class DownloadManager {
 		return downloadInfoMap.get(url);
 	}
 
+	public ConcurrentHashMap<String, DownloadInfo> getDownloadInfoMap() {
+		return downloadInfoMap;
+	}
+
+	public List<DownloadInfo> getDownloadList() {
+		return new ArrayList<DownloadInfo>(downloadInfoMap.values());
+	}
+
 	/**
 	 * 判断当前DownloadInfo是否有下载线程
 	 */
 	public boolean hasDownloadTask(String url) {
 		if (downloadTaskMap.get(url) != null) return true;
 		else return false;
-	}
-
-	public synchronized ConcurrentHashMap<String, DownloadInfo> getDownloadInfoMap() {
-		return downloadInfoMap;
 	}
 
 	public Long getTotalContentLength() {
@@ -315,5 +326,23 @@ public class DownloadManager {
 			total += downloadInfo.contentLength;
 		}
 		return total;
+	}
+
+	public synchronized void download(List<DownloadInfo> downloads) {
+		for (DownloadInfo downloadInfo : downloads) {
+			download(downloadInfo);
+		}
+	}
+
+	public synchronized void pause(List<DownloadInfo> downloads) {
+		for (DownloadInfo downloadInfo : downloads) {
+			pause(downloadInfo);
+		}
+	}
+
+	public synchronized void cancel(List<DownloadInfo> downloads) {
+		for (DownloadInfo downloadInfo : downloads) {
+			cancel(downloadInfo);
+		}
 	}
 }

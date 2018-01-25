@@ -1,5 +1,9 @@
 package tecsun.cjw.systemupdate.http;
 
+import android.content.Context;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
@@ -72,5 +76,22 @@ public class OkHttpUtil {
 			call.cancel();//取消
 		}
 		mCalls.remove(url);
+	}
+
+	/**
+	 * 网络连接是否正常
+	 *
+	 * @return true:有网络    false:无网络
+	 */
+	public static boolean isNetworkConnected(Context context) {
+		if (context != null) {
+			ConnectivityManager mConnectivityManager = (ConnectivityManager) context
+			  .getSystemService(Context.CONNECTIVITY_SERVICE);
+			NetworkInfo mNetworkInfo = mConnectivityManager.getActiveNetworkInfo();
+			if (mNetworkInfo != null) {
+				return mNetworkInfo.isAvailable();
+			}
+		}
+		return false;
 	}
 }
