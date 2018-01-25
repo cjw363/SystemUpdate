@@ -72,7 +72,6 @@ public class DownloadManager {
 					response.body().close();
 				} catch (Exception e) {
 //					if(e.getCause() instanceof ConnectException || e instanceof SocketTimeoutException || e instanceof SocketException){
-//
 //					}
 					e.printStackTrace();
 					UI.showToast("下载出错-" + e.getMessage());
