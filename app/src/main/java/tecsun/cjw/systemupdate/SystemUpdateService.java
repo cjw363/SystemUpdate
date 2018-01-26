@@ -8,7 +8,6 @@ import android.content.Intent;
 import android.graphics.BitmapFactory;
 import android.os.Environment;
 import android.os.IBinder;
-import android.os.PowerManager;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
 
@@ -16,6 +15,7 @@ import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -28,6 +28,7 @@ import tecsun.cjw.systemupdate.base.DownloadEvent;
 import tecsun.cjw.systemupdate.been.DownloadInfo;
 import tecsun.cjw.systemupdate.http.OkHttpUtil;
 import tecsun.cjw.systemupdate.http.download.DownloadManager;
+import tecsun.cjw.systemupdate.utils.FileUtil;
 import tecsun.cjw.systemupdate.utils.xml.SaxUpdateXmlParser;
 import tecsun.cjw.systemupdate.utils.xml.SystemModel;
 
@@ -63,8 +64,11 @@ public class SystemUpdateService extends Service implements DownloadManager.Down
 				if (target != null) {
 					//下载任务列表
 					mDownloads = new ArrayList<>();
-					mDownloads.add(createDownloadInfo(BaseApplication.command, target.getAddr(), Environment.getDownloadCacheDirectory().toString() + "/recovery/"));///recovery/
-					mDownloads.add(createDownloadInfo(BaseApplication.updateZip, target.getAddr(), Environment.getDownloadCacheDirectory().toString() + "/"));
+					/**
+					 * 保存的文件名是版本号-如update.zip:TecSun TA V1.2.12 Build20171130-update.zip
+					 */
+					mDownloads.add(createDownloadInfo(BaseApplication.command, target.getAddr(), "/recovery/" + target.getName() + "-"));///recovery/
+					mDownloads.add(createDownloadInfo(BaseApplication.updateZip, target.getAddr(), "/" + target.getName() + "-"));
 					DownloadManager.getInstance().download(mDownloads);
 				}
 			}
@@ -76,7 +80,7 @@ public class SystemUpdateService extends Service implements DownloadManager.Down
 		DownloadInfo downloadInfo = new DownloadInfo();
 		downloadInfo.name = name;
 		downloadInfo.url = url + name;
-		downloadInfo.filePath = path + downloadInfo.name;
+		downloadInfo.filePath = Environment.getDownloadCacheDirectory().toString() + path + downloadInfo.name;
 		return downloadInfo;
 	}
 
@@ -122,8 +126,12 @@ public class SystemUpdateService extends Service implements DownloadManager.Down
 				System.out.println("一个下载好了");
 				if (checkIsAllDownloaded(mDownloads)) {//所有下载任务已完成
 					getNotificationManager().notify(1, getNotification("下载成功...", 0).build());
-					PowerManager pManager = (PowerManager) getSystemService(Context.POWER_SERVICE); //重启到fastboot模式
-					pManager.reboot("recovery");
+					//// TODO: 2018/1/26 0026 这里可以提示用户是否重启更新系统
+					if (reNameSystemUpdateFile(mDownloads)) {//重命名合法文件成功
+						System.out.println("重命名合法文件成功");
+						//						PowerManager pManager = (PowerManager) getSystemService(Context.POWER_SERVICE); //重启到fastboot模式
+						//						pManager.reboot("recovery");
+					}
 				}
 				break;
 			case DownloadManager.STATE_CANCEL:
@@ -135,10 +143,21 @@ public class SystemUpdateService extends Service implements DownloadManager.Down
 	private boolean checkIsAllDownloaded(List<DownloadInfo> downloads) {
 		if (downloads == null || downloads.isEmpty()) return false;
 		for (DownloadInfo downloadInfo : downloads) {
-			if (downloadInfo.currentState != DownloadManager.STATE_SUCCESS) return false;
+//			if (downloadInfo.currentState != DownloadManager.STATE_SUCCESS) return false;
+			if (downloadInfo.contentLength != new File(downloadInfo.filePath).length())
+				return false;//大小不一致
 		}
 		return true;
 	}
+
+	private boolean reNameSystemUpdateFile(List<DownloadInfo> downloads) {
+		if (downloads == null || downloads.isEmpty()) return false;
+		for (DownloadInfo downloadInfo : downloads) {
+			if (!FileUtil.reNameSystemUpdateFile(downloadInfo.filePath)) return false;//有一重名失败就false
+		}
+		return true;
+	}
+
 
 	private void checkSystemUpdate() {
 		OkHttpUtil.getInstance().doHttp(BaseApplication.systemUpdateUrl, new Callback() {
@@ -153,6 +172,7 @@ public class SystemUpdateService extends Service implements DownloadManager.Down
 							if (targetList != null && targetList.size() > 0) {
 								SystemModel.Target target = targetList.get(0);//取第一个
 								System.out.println(target.getName());
+								getNotificationManager().notify(1, getNotification("发现新版本", 0).build());
 								return;
 							} else {
 								//暂无更新版本
@@ -167,6 +187,7 @@ public class SystemUpdateService extends Service implements DownloadManager.Down
 
 			@Override
 			public void onFailure(Call call, IOException e) {
+				e.printStackTrace();
 				System.out.println("检查更新失败");
 			}
 		});

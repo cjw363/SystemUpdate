@@ -71,17 +71,17 @@ public class DownloadManager {
 
 					response.body().close();
 				} catch (Exception e) {
-//					if(e.getCause() instanceof ConnectException || e instanceof SocketTimeoutException || e instanceof SocketException){
-//					}
+					//					if(e.getCause() instanceof ConnectException || e instanceof SocketTimeoutException || e instanceof SocketException){
+					//					}
 					e.printStackTrace();
-					UI.showToast("下载出错-" + e.getMessage());
+					UI.showToast("onResponse-" + e.getMessage());
 				}
 			}
 
 			@Override
 			public void onFailure(Call call, IOException e) {
 				e.printStackTrace();
-				UI.showToast(e.getMessage());
+				UI.showToast("onFailure-" + e.getMessage());
 			}
 		});
 	}
@@ -176,7 +176,7 @@ public class DownloadManager {
 		}
 
 		@Override
-		public void onResponse(Call call, Response response) {
+		public void onResponse(Call call, Response response) throws IOException {
 			try {
 				if (response != null) {
 					System.out.println(downloadInfo.name + "开始下载");
@@ -219,11 +219,14 @@ public class DownloadManager {
 					downloadTaskMap.remove(downloadInfo.url);
 				}
 			} catch (Exception e) {
+				e.printStackTrace();
+				UI.showToast("onResponse" + e.getMessage());
+//				SocketException: recvfrom failed: ETIMEDOUT  直接断网
+				//IOException: write failed: ENOSPC 硬盘内存不足失败
+				//SocketTimeoutException: timeout
+				//SocketException: Socket closed
 				// 下载失败，移除任务
 				downloadTaskMap.remove(downloadInfo.url);
-
-				e.printStackTrace();
-				UI.showToast(e.getMessage());
 			} finally {
 				if (response != null) response.body().close();
 			}
@@ -232,9 +235,9 @@ public class DownloadManager {
 		@Override
 		public void onFailure(Call call, IOException e) {
 			e.printStackTrace();
-			mFile.delete();// 删除无效文件
+			UI.showToast("onFailure" + e.getMessage());
+			//			mFile.delete();// 删除无效文件
 			downloadInfo.currentState = STATE_FAIL;
-
 			notifyDownloadStateChanged(downloadInfo);// 通知所有观察者，下载状态改变
 
 			// 下载失败，移除任务
@@ -305,7 +308,7 @@ public class DownloadManager {
 	}
 
 	public List<DownloadInfo> getDownloadList() {
-		return new ArrayList<DownloadInfo>(downloadInfoMap.values());
+		return new ArrayList<>(downloadInfoMap.values());
 	}
 
 	/**
