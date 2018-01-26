@@ -10,12 +10,7 @@ import tecsun.cjw.systemupdate.utils.UI;
 public abstract class CommonCallback implements Callback{
 	@Override
 	public void onResponse(final Call call, final Response response) throws IOException {
-		UI.runOnUIThread(new Runnable() {
-			@Override
-			public void run() {
-				_onResponse(call,response);
-			}
-		});
+		_onResponse(call,response);
 	}
 
 	@Override

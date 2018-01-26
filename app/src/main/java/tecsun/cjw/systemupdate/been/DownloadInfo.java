@@ -3,6 +3,9 @@ package tecsun.cjw.systemupdate.been;
 import java.io.File;
 import java.io.Serializable;
 
+/**
+ * 使用前，需要传入contentLength，url，filePath，name
+ */
 public class DownloadInfo implements Serializable {
 	public Long contentLength;// 文件大小
 	public String url;// 下载链接
@@ -10,6 +13,7 @@ public class DownloadInfo implements Serializable {
 	public String name;//文件名
 	public long currentPos;// 当前下载位置progress
 	public int currentState;// 当前下载状态
+	public String message;//下载状态的提示信息
 
 	public float getProgress() {//获取下载进度0-1
 		if (contentLength == 0) {

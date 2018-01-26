@@ -26,6 +26,8 @@ import tecsun.cjw.systemupdate.http.download.DownloadManager;
 import tecsun.cjw.systemupdate.utils.UI;
 import tecsun.cjw.systemupdate.utils.xml.SaxUpdateXmlParser;
 import tecsun.cjw.systemupdate.utils.xml.SystemModel;
+import tecsun.cjw.systemupdate.view.BaseCustomDialog;
+import tecsun.cjw.systemupdate.view.ContentDialog;
 
 import static tecsun.cjw.systemupdate.base.DownloadEvent.EVENT_CANCEL_3;
 import static tecsun.cjw.systemupdate.base.DownloadEvent.EVENT_PAUSE_2;
@@ -43,6 +45,7 @@ public class MainActivity extends AppCompatActivity implements DownloadManager.D
 
 	private int preProgress = 0;//用来记录之前的下载进度，总进度为100，如果相同则不需要频繁更新，避免卡顿
 	private SystemModel.Target mTarget;
+	private BaseCustomDialog mDialog;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -57,9 +60,11 @@ public class MainActivity extends AppCompatActivity implements DownloadManager.D
 	private void checkSystemUpdate() {
 		OkHttpUtil.getInstance().doHttp(BaseApplication.systemUpdateUrl, new Callback() {
 			@Override
-			public void onResponse(Call call, Response response) throws IOException{
+			public void onResponse(Call call, Response response) throws IOException {
 				try {
-					List<SystemModel> systemModels = new SaxUpdateXmlParser().parse(MainActivity.this, response.body().byteStream());
+					List<SystemModel> systemModels = new SaxUpdateXmlParser().parse(MainActivity.this, response
+					  .body()
+					  .byteStream());
 					String currVersion = Build.DISPLAY;
 					for (SystemModel system : systemModels) {
 						if (currVersion.equals(system.getName())) {
@@ -136,7 +141,8 @@ public class MainActivity extends AppCompatActivity implements DownloadManager.D
 			case DownloadManager.STATE_WAITING:
 				break;
 			case DownloadManager.STATE_DOWNLOADING:
-				float progress = (downloadInfo.currentPos / (float) DownloadManager.getInstance().getTotalContentLength());
+				float progress = (downloadInfo.currentPos / (float) DownloadManager.getInstance()
+				  .getTotalContentLength());
 				int currProgress = (int) (progress * 100);
 				if (preProgress < currProgress) {
 					mPgDownload.setProgress((int) (progress * 100));
@@ -146,6 +152,12 @@ public class MainActivity extends AppCompatActivity implements DownloadManager.D
 			case DownloadManager.STATE_PAUSE:
 				break;
 			case DownloadManager.STATE_FAIL:
+				if(mDialog==null){
+					mDialog = new ContentDialog.Builder(this).setContent(downloadInfo.message)
+					  .setSingleButton()
+					  .build();
+				}
+				mDialog.showDialog();
 				break;
 			case DownloadManager.STATE_SUCCESS:
 				break;
