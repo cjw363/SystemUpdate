@@ -57,9 +57,11 @@ public class MainActivity extends AppCompatActivity implements DownloadManager.D
 	private void checkSystemUpdate() {
 		OkHttpUtil.getInstance().doHttp(BaseApplication.systemUpdateUrl, new Callback() {
 			@Override
-			public void onResponse(Call call, Response response) throws IOException{
+			public void onResponse(Call call, Response response) throws IOException {
 				try {
-					List<SystemModel> systemModels = new SaxUpdateXmlParser().parse(MainActivity.this, response.body().byteStream());
+					List<SystemModel> systemModels = new SaxUpdateXmlParser().parse(MainActivity.this, response
+					  .body()
+					  .byteStream());
 					String currVersion = Build.DISPLAY;
 					for (SystemModel system : systemModels) {
 						if (currVersion.equals(system.getName())) {
@@ -136,7 +138,8 @@ public class MainActivity extends AppCompatActivity implements DownloadManager.D
 			case DownloadManager.STATE_WAITING:
 				break;
 			case DownloadManager.STATE_DOWNLOADING:
-				float progress = (downloadInfo.currentPos / (float) DownloadManager.getInstance().getTotalContentLength());
+				float progress = (downloadInfo.currentPos / (float) DownloadManager.getInstance()
+				  .getTotalContentLength());
 				int currProgress = (int) (progress * 100);
 				if (preProgress < currProgress) {
 					mPgDownload.setProgress((int) (progress * 100));
