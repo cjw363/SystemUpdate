@@ -74,14 +74,19 @@ public class DownloadManager {
 					//					if(e.getCause() instanceof ConnectException || e instanceof SocketTimeoutException || e instanceof SocketException){
 					//					}
 					e.printStackTrace();
-					UI.showToast("onResponse-" + e.getMessage());
+					downloadInfo.message = "onResponse--" + e.getMessage();
+					downloadInfo.currentState = STATE_FAIL;
+					notifyDownloadStateChanged(downloadInfo);// 通知所有观察者，下载状态改变
 				}
 			}
 
 			@Override
 			public void onFailure(Call call, IOException e) {
+				//UnknownHostException: Unable to resolve host "cpzx.e-tecsun.com": No address associated with hostname
 				e.printStackTrace();
-				UI.showToast("onFailure-" + e.getMessage());
+				downloadInfo.message = "onFailure--" + e.getMessage();
+				downloadInfo.currentState = STATE_FAIL;
+				notifyDownloadStateChanged(downloadInfo);// 通知所有观察者，下载状态改变
 			}
 		});
 	}
@@ -157,10 +162,12 @@ public class DownloadManager {
 					//					file.delete();
 					//					OkHttpUtil.getInstance().downloadFileByRange(downloadInfo.url, 0, contentLength, downloadCallback);
 				} else {//断点续传
-					OkHttpUtil.getInstance().downloadFileByRange(downloadInfo.url, downloadLength, contentLength, downloadCallback);
+					OkHttpUtil.getInstance()
+					  .downloadFileByRange(downloadInfo.url, downloadLength, contentLength, downloadCallback);
 				}
 			} else {//不存在，从头开始下载
-				OkHttpUtil.getInstance().downloadFileByRange(downloadInfo.url, 0, contentLength, downloadCallback);
+				OkHttpUtil.getInstance()
+				  .downloadFileByRange(downloadInfo.url, 0, contentLength, downloadCallback);
 			}
 		}
 	}
@@ -220,8 +227,10 @@ public class DownloadManager {
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
-				UI.showToast("onResponse" + e.getMessage());
-//				SocketException: recvfrom failed: ETIMEDOUT  直接断网
+				downloadInfo.message = "onResponse--" + e.getMessage();
+				downloadInfo.currentState = STATE_FAIL;
+				notifyDownloadStateChanged(downloadInfo);// 通知所有观察者，下载状态改变
+				//				SocketException: recvfrom failed: ETIMEDOUT  直接断网
 				//IOException: write failed: ENOSPC 硬盘内存不足失败
 				//SocketTimeoutException: timeout
 				//SocketException: Socket closed
@@ -235,8 +244,8 @@ public class DownloadManager {
 		@Override
 		public void onFailure(Call call, IOException e) {
 			e.printStackTrace();
-			UI.showToast("onFailure" + e.getMessage());
 			//			mFile.delete();// 删除无效文件
+			downloadInfo.message = "onFailure--" + e.getMessage();
 			downloadInfo.currentState = STATE_FAIL;
 			notifyDownloadStateChanged(downloadInfo);// 通知所有观察者，下载状态改变
 

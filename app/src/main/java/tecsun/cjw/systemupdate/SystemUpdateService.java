@@ -67,8 +67,10 @@ public class SystemUpdateService extends Service implements DownloadManager.Down
 					/**
 					 * 保存的文件名是版本号-如update.zip:TecSun TA V1.2.12 Build20171130-update.zip
 					 */
-					mDownloads.add(createDownloadInfo(BaseApplication.command, target.getAddr(), "/recovery/" + target.getName() + "-"));///recovery/
-					mDownloads.add(createDownloadInfo(BaseApplication.updateZip, target.getAddr(), "/" + target.getName() + "-"));
+					mDownloads.add(createDownloadInfo(BaseApplication.command, target.getAddr(), "/recovery/" + target
+					  .getName() + "-"));///recovery/
+					mDownloads.add(createDownloadInfo(BaseApplication.updateZip, target.getAddr(), "/" + target
+					  .getName() + "-"));
 					DownloadManager.getInstance().download(mDownloads);
 				}
 			}
@@ -80,7 +82,8 @@ public class SystemUpdateService extends Service implements DownloadManager.Down
 		DownloadInfo downloadInfo = new DownloadInfo();
 		downloadInfo.name = name;
 		downloadInfo.url = url + name;
-		downloadInfo.filePath = Environment.getDownloadCacheDirectory().toString() + path + downloadInfo.name;
+		downloadInfo.filePath = Environment.getDownloadCacheDirectory()
+		  .toString() + path + downloadInfo.name;
 		return downloadInfo;
 	}
 
@@ -108,7 +111,8 @@ public class SystemUpdateService extends Service implements DownloadManager.Down
 				getNotificationManager().notify(1, getNotification("等待下载...", 0).build());
 				break;
 			case DownloadManager.STATE_DOWNLOADING:
-				float progress = (downloadInfo.currentPos / (float) DownloadManager.getInstance().getTotalContentLength());
+				float progress = (downloadInfo.currentPos / (float) DownloadManager.getInstance()
+				  .getTotalContentLength());
 				int currProgress = (int) (progress * 100);
 				if (preProgress < currProgress) {
 					System.out.println(currProgress);
@@ -143,9 +147,11 @@ public class SystemUpdateService extends Service implements DownloadManager.Down
 	private boolean checkIsAllDownloaded(List<DownloadInfo> downloads) {
 		if (downloads == null || downloads.isEmpty()) return false;
 		for (DownloadInfo downloadInfo : downloads) {
-//			if (downloadInfo.currentState != DownloadManager.STATE_SUCCESS) return false;
-			if (downloadInfo.contentLength != new File(downloadInfo.filePath).length())
-				return false;//大小不一致
+			//			if (downloadInfo.currentState != DownloadManager.STATE_SUCCESS) return false;
+			if(downloadInfo.contentLength!=null){
+				if (downloadInfo.contentLength!=new File(downloadInfo.filePath).length() )
+					return false;//大小不一致
+			}
 		}
 		return true;
 	}
@@ -164,7 +170,9 @@ public class SystemUpdateService extends Service implements DownloadManager.Down
 			@Override
 			public void onResponse(Call call, Response response) {
 				try {
-					List<SystemModel> systemModels = new SaxUpdateXmlParser().parse(SystemUpdateService.this, response.body().byteStream());
+					List<SystemModel> systemModels = new SaxUpdateXmlParser().parse(SystemUpdateService.this, response
+					  .body()
+					  .byteStream());
 					String currVersion = android.os.Build.DISPLAY;
 					for (SystemModel system : systemModels) {
 						if (currVersion.equals(system.getName())) {

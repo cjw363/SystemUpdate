@@ -41,6 +41,11 @@ public class BaseCustomDialog extends Dialog {
 		this.view = builder.view;
 	}
 
+	public void showDialog() {
+		if (this.isShowing()) dismiss();
+		this.show();
+	}
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
