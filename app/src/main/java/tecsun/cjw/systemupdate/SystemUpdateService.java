@@ -133,7 +133,7 @@ public class SystemUpdateService extends Service implements DownloadManager.Down
 					//// TODO: 2018/1/26 0026 这里可以提示用户是否重启更新系统
 					if (reNameSystemUpdateFile(mDownloads)) {//重命名合法文件成功
 						System.out.println("重命名合法文件成功");
-						//						PowerManager pManager = (PowerManager) getSystemService(Context.POWER_SERVICE); //重启到fastboot模式
+						//					PowerManager pManager = (PowerManager) getSystemService(Context.POWER_SERVICE); //重启到fastboot模式
 						//						pManager.reboot("recovery");
 					}
 				}
