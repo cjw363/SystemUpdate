@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+	<declare-styleable name="RoundProgress">
+		<!--背景圆形颜色 -->
+		<attr name="bgColor" format="color"/>
+		<!--进度条颜色 -->
+		<attr name="roundColor" format="color"/>
+		<!--进度条及背景圆形的宽度 -->
+		<attr name="roundWidth" format="dimension"/>
+		<!--中心字体的大小 -->
+		<attr name="roundTextSize" format="dimension"/>
+		<!--中心字体的颜色 -->
+		<attr name="roundTextColor" format="color"/>
+	</declare-styleable>
+</resources>

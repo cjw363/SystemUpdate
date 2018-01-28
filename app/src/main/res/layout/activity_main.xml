@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout
 	xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:app="http://schemas.android.com/apk/res-auto"
 	xmlns:tools="http://schemas.android.com/tools"
 	android:layout_width="match_parent"
 	android:layout_height="match_parent"
@@ -19,9 +20,9 @@
 
 		<TextView
 			android:id="@+id/tv_tip"
+			style="@style/tv_hint"
 			android:layout_below="@id/tv_version_name"
 			android:layout_centerHorizontal="true"
-			style="@style/tv_hint"
 			/>
 
 		<View
@@ -41,6 +42,18 @@
 			style="@style/tv_normal"
 			android:layout_gravity="center_horizontal"
 			/>
+
+		<tecsun.cjw.systemupdate.view.RoundProgress
+			android:id="@+id/rp"
+			android:layout_width="160dp"
+			android:layout_height="160dp"
+			android:layout_gravity="center_horizontal"
+			android:layout_marginTop="10dp"
+			app:bgColor="@android:color/darker_gray"
+			app:roundColor="@android:color/holo_red_dark"
+			app:roundTextColor="#18b4ed"
+			app:roundTextSize="16sp"
+			app:roundWidth="10dp"/>
 	</LinearLayout>
 
 	<RelativeLayout
@@ -59,11 +72,11 @@
 			android:layout_width="match_parent"
 			android:layout_height="30dp"
 			android:layout_centerInParent="true"
-			android:background="#f00"
-			android:layout_marginStart="20dp"
-			android:layout_marginEnd="20dp"
-			android:layout_marginTop="40dp"
 			android:layout_marginBottom="40dp"
+			android:layout_marginEnd="20dp"
+			android:layout_marginStart="20dp"
+			android:layout_marginTop="40dp"
+			android:background="#f00"
 			android:max="100"/>
 
 		<LinearLayout

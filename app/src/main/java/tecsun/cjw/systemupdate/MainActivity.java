@@ -21,6 +21,7 @@ import okhttp3.Response;
 import tecsun.cjw.systemupdate.base.BaseApplication;
 import tecsun.cjw.systemupdate.base.DownloadEvent;
 import tecsun.cjw.systemupdate.been.DownloadInfo;
+import tecsun.cjw.systemupdate.http.NetManager;
 import tecsun.cjw.systemupdate.http.OkHttpUtil;
 import tecsun.cjw.systemupdate.http.download.DownloadManager;
 import tecsun.cjw.systemupdate.utils.UI;
@@ -53,7 +54,7 @@ public class MainActivity extends AppCompatActivity implements DownloadManager.D
 		setContentView(R.layout.activity_main);
 		ButterKnife.bind(this);
 
-		checkSystemUpdate();//检查更新系统版本
+		if (NetManager.isConnected(this)) checkSystemUpdate();//检查更新系统版本
 		DownloadManager.getInstance().registerObserver(this);//注册观察者
 	}
 
@@ -62,9 +63,7 @@ public class MainActivity extends AppCompatActivity implements DownloadManager.D
 			@Override
 			public void onResponse(Call call, Response response) throws IOException {
 				try {
-					List<SystemModel> systemModels = new SaxUpdateXmlParser().parse(MainActivity.this, response
-					  .body()
-					  .byteStream());
+					List<SystemModel> systemModels = new SaxUpdateXmlParser().parse(MainActivity.this, response.body().byteStream());
 					String currVersion = Build.DISPLAY;
 					for (SystemModel system : systemModels) {
 						if (currVersion.equals(system.getName())) {
@@ -141,8 +140,7 @@ public class MainActivity extends AppCompatActivity implements DownloadManager.D
 			case DownloadManager.STATE_WAITING:
 				break;
 			case DownloadManager.STATE_DOWNLOADING:
-				float progress = (downloadInfo.currentPos / (float) DownloadManager.getInstance()
-				  .getTotalContentLength());
+				float progress = (downloadInfo.currentPos / (float) DownloadManager.getInstance().getTotalContentLength());
 				int currProgress = (int) (progress * 100);
 				if (preProgress < currProgress) {
 					mPgDownload.setProgress((int) (progress * 100));
@@ -152,10 +150,8 @@ public class MainActivity extends AppCompatActivity implements DownloadManager.D
 			case DownloadManager.STATE_PAUSE:
 				break;
 			case DownloadManager.STATE_FAIL:
-				if(mDialog==null){
-					mDialog = new ContentDialog.Builder(this).setContent(downloadInfo.message)
-					  .setSingleButton()
-					  .build();
+				if (mDialog == null) {
+					mDialog = new ContentDialog.Builder(this).setContent(downloadInfo.message).setSingleButton().build();
 				}
 				mDialog.showDialog();
 				break;
