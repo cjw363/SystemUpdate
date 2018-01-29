@@ -96,7 +96,7 @@ public class RoundProgress extends View {
 		canvas.drawText(mProgerss + "%", mCenterX - width / 2, mCenterY + mTextSize / 2, mPaint);
 	}
 
-	public void setProgerss(int progerss) {
+	public void setProgress(int progerss) {
 		mProgerss = progerss;
 		postInvalidate();
 	}

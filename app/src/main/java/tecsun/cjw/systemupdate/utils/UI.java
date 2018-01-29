@@ -124,11 +124,6 @@ public class UI {
 	///////////////////////////////////////////////////
 
 	public static void showToast(final String s) {
-		runOnUIThread(new Runnable() {
-			@Override
-			public void run() {
-				Toast.makeText(BaseApplication.getContext(), s, Toast.LENGTH_SHORT).show();
-			}
-		});
+		Toast.makeText(BaseApplication.getContext(), s, Toast.LENGTH_SHORT).show();
 	}
 }

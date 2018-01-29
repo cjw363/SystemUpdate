@@ -61,7 +61,9 @@ public class OkHttpUtil {
 	public void downloadFileByRange(String url, long startIndex, long endIndex, Callback callback) {
 		// 创建一个Request
 		// 设置分段下载的头信息。 Range:做分段数据请求,断点续传指示下载的区间。格式: Range bytes=0-1024或者bytes:0-1024
-		Request request = new Request.Builder().header("RANGE", "bytes=" + startIndex + "-" + endIndex).url(url).build();
+		Request request = new Request.Builder().header("RANGE", "bytes=" + startIndex + "-" + endIndex)
+		  .url(url)
+		  .build();
 		Call call = mClient.newCall(request);
 		mCalls.put(url, call);//记录请求
 		call.enqueue(callback);

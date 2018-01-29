@@ -55,8 +55,6 @@ public class DownloadManager {
 				try {
 					if (response.code() != 200) {
 						System.out.println("响应码-" + response.code() + "-" + response.message());
-						UI.showToast("响应码-" + response.code() + "-" + response.message());
-						return;
 					}
 					// 获取资源大小
 					downloadInfo.contentLength = response.body().contentLength();
@@ -71,10 +69,8 @@ public class DownloadManager {
 
 					response.body().close();
 				} catch (Exception e) {
-					//					if(e.getCause() instanceof ConnectException || e instanceof SocketTimeoutException || e instanceof SocketException){
-					//					}
 					e.printStackTrace();
-					downloadInfo.message = "onResponse--" + e.getMessage();
+					downloadInfo.message = "响应失败：onResponse--" + e.getMessage();
 					downloadInfo.currentState = STATE_FAIL;
 					notifyDownloadStateChanged(downloadInfo);// 通知所有观察者，下载状态改变
 				}
@@ -84,7 +80,7 @@ public class DownloadManager {
 			public void onFailure(Call call, IOException e) {
 				//UnknownHostException: Unable to resolve host "cpzx.e-tecsun.com": No address associated with hostname
 				e.printStackTrace();
-				downloadInfo.message = "onFailure--" + e.getMessage();
+				downloadInfo.message = "响应失败：onFailure--" + e.getMessage();
 				downloadInfo.currentState = STATE_FAIL;
 				notifyDownloadStateChanged(downloadInfo);// 通知所有观察者，下载状态改变
 			}
@@ -97,15 +93,15 @@ public class DownloadManager {
 	public synchronized void pause(DownloadInfo downloadInfo) {
 		if (downloadInfo != null) {
 			if (downloadInfo.currentState == STATE_WAITING || downloadInfo.currentState == STATE_DOWNLOADING) {
-				downloadInfo.currentState = STATE_PAUSE;
-				notifyDownloadStateChanged(downloadInfo);// 通知所有观察者，下载状态改变
-
 				DownloadTask downloadTask = downloadTaskMap.get(downloadInfo.url);
 				if (downloadTask != null) {
-					//					OkHttpUtil.getInstance().cancel(downloadInfo.url);//会报warn
 					ThreadManager.getInstance().cancel(downloadTask);
 				}
+				OkHttpUtil.getInstance().cancel(downloadInfo.url);//会报warn
 				downloadTaskMap.remove(downloadInfo.url);
+
+				downloadInfo.currentState = STATE_PAUSE;
+				notifyDownloadStateChanged(downloadInfo);// 通知所有观察者，下载状态改变
 				System.out.println(downloadInfo.name + "下载暂停");
 			}
 		}
@@ -115,7 +111,6 @@ public class DownloadManager {
 	 * 取消下载
 	 */
 	public synchronized void cancel(DownloadInfo downloadInfo) {
-		System.out.println("取消下载");
 		if (downloadInfo != null) {
 			downloadInfo.currentPos = 0;
 			downloadInfo.currentState = STATE_CANCEL;// 切换为取消下载
@@ -123,15 +118,16 @@ public class DownloadManager {
 
 			DownloadTask downloadTask = downloadTaskMap.get(downloadInfo.url);
 			if (downloadTask != null) {
-				//				OkHttpUtil.getInstance().cancel(downloadInfo.url);//会报warn
 				ThreadManager.getInstance().cancel(downloadTask);
 			}
+			OkHttpUtil.getInstance().cancel(downloadInfo.url);//会报warn
 			downloadTaskMap.remove(downloadInfo.url);
 			downloadInfoMap.remove(downloadInfo.url);
 
 			File file = new File(downloadInfo.filePath);// 获取文件路径
 			file.delete();// 删除文件
 		}
+		System.out.println("取消下载");
 	}
 
 	/**
@@ -158,9 +154,6 @@ public class DownloadManager {
 				if (contentLength == downloadLength) {
 					downloadInfo.currentState = STATE_SUCCESS;
 					notifyDownloadStateChanged(downloadInfo);// 通知所有观察者，下载状态改变
-					//// TODO: 2018/1/23 0023  测试
-					//					file.delete();
-					//					OkHttpUtil.getInstance().downloadFileByRange(downloadInfo.url, 0, contentLength, downloadCallback);
 				} else {//断点续传
 					OkHttpUtil.getInstance()
 					  .downloadFileByRange(downloadInfo.url, downloadLength, contentLength, downloadCallback);
@@ -202,7 +195,7 @@ public class DownloadManager {
 						total += len;
 						savedFile.write(b, 0, len);
 						downloadInfo.currentPos = total;//更新下载进度
-						//						System.out.println(total);
+						System.out.println(total);
 						notifyDownloadStateChanged(downloadInfo);// 通知观察者，下载进度发生变化
 					}
 					response.body().close();
@@ -217,6 +210,7 @@ public class DownloadManager {
 						} else {//下载结束的文件大小不对
 							//下载失败
 							downloadInfo.currentState = STATE_FAIL;
+							downloadInfo.message = "下载失败：onResponse--文件大小不一致";
 							notifyDownloadStateChanged(downloadInfo);// 通知观察者，下载进度发生变化
 							delete(downloadInfo);//删除文件
 							System.out.println(downloadInfo.name + "下载失败");
@@ -226,11 +220,16 @@ public class DownloadManager {
 					downloadTaskMap.remove(downloadInfo.url);
 				}
 			} catch (Exception e) {
-				e.printStackTrace();
-				downloadInfo.message = "onResponse--" + e.getMessage();
-				downloadInfo.currentState = STATE_FAIL;
-				notifyDownloadStateChanged(downloadInfo);// 通知所有观察者，下载状态改变
-				//				SocketException: recvfrom failed: ETIMEDOUT  直接断网
+				if (e.getMessage().contains("Socket closed")) {
+					downloadInfo.currentState = STATE_PAUSE;
+					notifyDownloadStateChanged(downloadInfo);// 通知所有观察者，下载状态改变
+				} else {
+					e.printStackTrace();
+					downloadInfo.message = "下载失败：onResponse--" + e.getMessage();
+					downloadInfo.currentState = STATE_FAIL;
+					notifyDownloadStateChanged(downloadInfo);// 通知所有观察者，下载状态改变
+				}
+				//	SocketException: recvfrom failed: ETIMEDOUT  直接断网
 				//IOException: write failed: ENOSPC 硬盘内存不足失败
 				//SocketTimeoutException: timeout
 				//SocketException: Socket closed
@@ -245,7 +244,8 @@ public class DownloadManager {
 		public void onFailure(Call call, IOException e) {
 			e.printStackTrace();
 			//			mFile.delete();// 删除无效文件
-			downloadInfo.message = "onFailure--" + e.getMessage();
+			call.cancel();
+			downloadInfo.message = "下载失败：onFailure--" + e.getMessage();
 			downloadInfo.currentState = STATE_FAIL;
 			notifyDownloadStateChanged(downloadInfo);// 通知所有观察者，下载状态改变
 

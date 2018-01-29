@@ -44,10 +44,10 @@
 			/>
 
 		<tecsun.cjw.systemupdate.view.RoundProgress
-			android:id="@+id/rp"
-			android:layout_width="160dp"
-			android:layout_height="160dp"
-			android:layout_gravity="center_horizontal"
+			android:id="@+id/rp_download"
+			android:layout_width="250dp"
+			android:layout_height="250dp"
+			android:layout_gravity="center"
 			android:layout_marginTop="10dp"
 			app:bgColor="@android:color/darker_gray"
 			app:roundColor="@android:color/holo_red_dark"
@@ -66,49 +66,17 @@
 			style="@style/view_divider_1"
 			android:layout_alignParentTop="true"/>
 
-		<ProgressBar
-			android:id="@+id/pg_download"
-			style="@style/Widget.AppCompat.ProgressBar.Horizontal"
-			android:layout_width="match_parent"
-			android:layout_height="30dp"
-			android:layout_centerInParent="true"
-			android:layout_marginBottom="40dp"
-			android:layout_marginEnd="20dp"
-			android:layout_marginStart="20dp"
-			android:layout_marginTop="40dp"
-			android:background="#f00"
-			android:max="100"/>
-
-		<LinearLayout
-			android:layout_width="wrap_content"
+		<Button
+			android:id="@+id/bt_download"
+			android:layout_width="300dp"
 			android:layout_height="wrap_content"
+			android:background="@drawable/bg_rectangle_blue"
+			android:layout_margin="20dp"
+			android:textColor="@color/tv_white"
 			android:layout_centerInParent="true"
-			android:orientation="horizontal">
-
-			<Button
-				android:id="@+id/bt_download"
-				android:layout_width="wrap_content"
-				android:layout_height="wrap_content"
-				android:onClick="onDownload"
-				android:text="download"
-				/>
-
-			<Button
-				android:id="@+id/bt_pause"
-				android:layout_width="wrap_content"
-				android:layout_height="wrap_content"
-				android:onClick="onPause"
-				android:text="pause"
-				/>
-
-			<Button
-				android:id="@+id/bt_cancel"
-				android:layout_width="wrap_content"
-				android:layout_height="wrap_content"
-				android:onClick="onCancel"
-				android:text="cancel"
-				/>
-		</LinearLayout>
+			android:onClick="onDownload"
+			android:text="检查更新"
+			/>
 
 	</RelativeLayout>
 </RelativeLayout>

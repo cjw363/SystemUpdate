@@ -24,17 +24,23 @@ import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.Response;
 import tecsun.cjw.systemupdate.base.BaseApplication;
-import tecsun.cjw.systemupdate.base.DownloadEvent;
+import tecsun.cjw.systemupdate.been.DownloadEvent;
 import tecsun.cjw.systemupdate.been.DownloadInfo;
+import tecsun.cjw.systemupdate.http.NetManager;
 import tecsun.cjw.systemupdate.http.OkHttpUtil;
 import tecsun.cjw.systemupdate.http.download.DownloadManager;
 import tecsun.cjw.systemupdate.utils.FileUtil;
+import tecsun.cjw.systemupdate.utils.SPUtils;
+import tecsun.cjw.systemupdate.utils.SerializeUtils;
+import tecsun.cjw.systemupdate.utils.UI;
 import tecsun.cjw.systemupdate.utils.xml.SaxUpdateXmlParser;
 import tecsun.cjw.systemupdate.utils.xml.SystemModel;
 
-import static tecsun.cjw.systemupdate.base.DownloadEvent.EVENT_CANCEL_3;
-import static tecsun.cjw.systemupdate.base.DownloadEvent.EVENT_DOWNLOAD_1;
-import static tecsun.cjw.systemupdate.base.DownloadEvent.EVENT_PAUSE_2;
+import static tecsun.cjw.systemupdate.been.DownloadEvent.EVENT_CANCEL_3;
+import static tecsun.cjw.systemupdate.been.DownloadEvent.EVENT_DOWNLOAD_1;
+import static tecsun.cjw.systemupdate.been.DownloadEvent.EVENT_PAUSE_2;
+import static tecsun.cjw.systemupdate.been.DownloadEvent.EVENT_SUCCESS_4;
+import static tecsun.cjw.systemupdate.been.DownloadEvent.EVENT_SUCCESS_TO_UPDATE_5;
 
 public class SystemUpdateService extends Service implements DownloadManager.DownloadObserver {
 
@@ -58,17 +64,22 @@ public class SystemUpdateService extends Service implements DownloadManager.Down
 		if (intent != null) {
 			String action = intent.getAction();
 			if (INTENT_ACTION_CHECK_SYSTEM_UPDATE.equals(action)) {//接受的是检查更新命令
-				checkSystemUpdate();
+				if (NetManager.isConnected(this)) {
+					checkSystemUpdate();//检查更新系统版本
+				}
 			} else if (INTENT_ACTION_SYSTEM_DOWNLOAD.equals(action)) {//接受的是下载命令
 				SystemModel.Target target = (SystemModel.Target) intent.getSerializableExtra("target");
+				SPUtils.putString("target", SerializeUtils.serialize(target));
 				if (target != null) {
 					//下载任务列表
 					mDownloads = new ArrayList<>();
 					/**
 					 * 保存的文件名是版本号-如update.zip:TecSun TA V1.2.12 Build20171130-update.zip
 					 */
-					mDownloads.add(createDownloadInfo(BaseApplication.command, target.getAddr(), "/recovery/" + target.getName() + "-"));///recovery/
-					mDownloads.add(createDownloadInfo(BaseApplication.updateZip, target.getAddr(), "/" + target.getName() + "-"));
+					mDownloads.add(createDownloadInfo(BaseApplication.command, target.getAddr(), "/recovery/" + target
+					  .getName() + "-"));///recovery/
+					mDownloads.add(createDownloadInfo(BaseApplication.updateZip, target.getAddr(), "/" + target
+					  .getName() + "-"));
 					DownloadManager.getInstance().download(mDownloads);
 				}
 			}
@@ -80,7 +91,8 @@ public class SystemUpdateService extends Service implements DownloadManager.Down
 		DownloadInfo downloadInfo = new DownloadInfo();
 		downloadInfo.name = name;
 		downloadInfo.url = url + name;
-		downloadInfo.filePath = Environment.getDownloadCacheDirectory().toString() + path + downloadInfo.name;
+		downloadInfo.filePath = Environment.getDownloadCacheDirectory()
+		  .toString() + path + downloadInfo.name;
 		return downloadInfo;
 	}
 
@@ -96,6 +108,9 @@ public class SystemUpdateService extends Service implements DownloadManager.Down
 			case EVENT_CANCEL_3:
 				if (mDownloads != null) DownloadManager.getInstance().cancel(mDownloads);
 				break;
+			case EVENT_SUCCESS_TO_UPDATE_5:
+				rebootToUpdate(mDownloads);
+				break;
 		}
 	}
 
@@ -108,29 +123,33 @@ public class SystemUpdateService extends Service implements DownloadManager.Down
 				getNotificationManager().notify(1, getNotification("等待下载...", 0).build());
 				break;
 			case DownloadManager.STATE_DOWNLOADING:
-				float progress = (downloadInfo.currentPos / (float) DownloadManager.getInstance().getTotalContentLength());
+				float progress = (downloadInfo.currentPos / (float) DownloadManager.getInstance()
+				  .getTotalContentLength());
 				int currProgress = (int) (progress * 100);
 				if (preProgress < currProgress) {
 					System.out.println(currProgress);
+					SPUtils.putInt("progress",currProgress);
+					SPUtils.putInt("state",DownloadManager.STATE_DOWNLOADING);
 					getNotificationManager().notify(1, getNotification("下载中...", currProgress).build());
 				}
 				preProgress = currProgress;
 				break;
 			case DownloadManager.STATE_PAUSE:
+				SPUtils.putInt("state",DownloadManager.STATE_PAUSE);
 				getNotificationManager().notify(1, getNotification("下载暂停...", 0).build());
 				break;
 			case DownloadManager.STATE_FAIL:
+				SPUtils.putInt("state",DownloadManager.STATE_PAUSE);
 				getNotificationManager().notify(1, getNotification("下载失败...", 0).build());
 				break;
 			case DownloadManager.STATE_SUCCESS:
-				System.out.println("一个下载好了");
-				if (checkIsAllDownloaded(mDownloads)) {//所有下载任务已完成
-					getNotificationManager().notify(1, getNotification("下载成功...", 0).build());
-					//// TODO: 2018/1/26 0026 这里可以提示用户是否重启更新系统
-					if (reNameSystemUpdateFile(mDownloads)) {//重命名合法文件成功
-						System.out.println("重命名合法文件成功");
-						//					PowerManager pManager = (PowerManager) getSystemService(Context.POWER_SERVICE); //重启到fastboot模式
-						//						pManager.reboot("recovery");
+				if (mDownloads != null) {
+					if (checkIsAllDownloaded(mDownloads)) {//所有下载任务已完成
+						SPUtils.putInt("progress",100);
+						SPUtils.putInt("state",DownloadManager.STATE_SUCCESS);
+						getNotificationManager().notify(1, getNotification("下载成功...", 100).build());
+						UI.showToast("下载成功");
+						EventBus.getDefault().post(new DownloadEvent(EVENT_SUCCESS_4));
 					}
 				}
 				break;
@@ -140,10 +159,20 @@ public class SystemUpdateService extends Service implements DownloadManager.Down
 		}
 	}
 
+	private void rebootToUpdate(List<DownloadInfo> downloads) {
+		if (downloads != null) {
+			if (reNameSystemUpdateFile(downloads)) {//重命名合法文件成功
+				System.out.println("重命名合法文件成功");
+				//					PowerManager pManager = (PowerManager) getSystemService(Context.POWER_SERVICE); //重启到fastboot模式
+				//					pManager.reboot("recovery");
+			}
+		}
+	}
+
 	private boolean checkIsAllDownloaded(List<DownloadInfo> downloads) {
 		if (downloads == null || downloads.isEmpty()) return false;
 		for (DownloadInfo downloadInfo : downloads) {
-			//			if (downloadInfo.currentState != DownloadManager.STATE_SUCCESS) return false;
+			//			if (downloadInfo.currentState != DownloadManager.BT_STATE_SUCCESS) return false;
 			if (downloadInfo.contentLength == null) return false;
 			if (downloadInfo.contentLength != new File(downloadInfo.filePath).length())
 				return false;//大小不一致
@@ -165,7 +194,9 @@ public class SystemUpdateService extends Service implements DownloadManager.Down
 			@Override
 			public void onResponse(Call call, Response response) {
 				try {
-					List<SystemModel> systemModels = new SaxUpdateXmlParser().parse(SystemUpdateService.this, response.body().byteStream());
+					List<SystemModel> systemModels = new SaxUpdateXmlParser().parse(SystemUpdateService.this, response
+					  .body()
+					  .byteStream());
 					String currVersion = android.os.Build.DISPLAY;
 					for (SystemModel system : systemModels) {
 						if (currVersion.equals(system.getName())) {
