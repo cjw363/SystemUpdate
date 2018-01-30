@@ -112,7 +112,6 @@ public class MainActivity extends AppCompatActivity implements DownloadManager.D
 		}
 	}
 
-
 	public void onDownload(View v) {
 		switch ((Integer) v.getTag()) {
 			case BT_STATE_CHECK_UPDATE:
