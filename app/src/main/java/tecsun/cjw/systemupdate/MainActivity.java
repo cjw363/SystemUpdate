@@ -207,6 +207,8 @@ public class MainActivity extends AppCompatActivity implements DownloadManager.D
 				  .setSingleButton()
 				  .build();
 				mDialog.showDialog();
+				mBtDownload.setEnabled(false);
+				mBtDownload.setClickable(false);
 			}
 		});
 	}

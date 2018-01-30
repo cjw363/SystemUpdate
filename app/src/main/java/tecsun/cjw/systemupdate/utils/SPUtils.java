@@ -25,4 +25,12 @@ public class SPUtils {
 		SharedPreferences sp = UI.getContext().getSharedPreferences("tecsun_system_update", Context.MODE_PRIVATE);
 		return sp.getInt(key, 0);
 	}
+
+	public static void clear() {
+		SharedPreferences preferences = UI.getContext().getSharedPreferences("tecsun_system_update", Context.MODE_PRIVATE);
+		SharedPreferences.Editor editor = preferences.edit();
+		editor.clear();
+		editor.apply();
+	}
+
 }

@@ -141,7 +141,7 @@ public class SystemUpdateService extends Service implements DownloadManager.Down
 			case DownloadManager.STATE_UNDO:
 				break;
 			case DownloadManager.STATE_WAITING:
-				getNotificationManager().notify(1, setNotification("等待下载..."+downloadInfo.name, 0).build());
+				getNotificationManager().notify(1, setNotification("等待下载..." + downloadInfo.name, 0).build());
 				break;
 			case DownloadManager.STATE_DOWNLOADING:
 				float progress = (downloadInfo.currentPos / (float) DownloadManager.getInstance()
@@ -151,24 +151,26 @@ public class SystemUpdateService extends Service implements DownloadManager.Down
 					System.out.println(currProgress);
 					SPUtils.putInt("progress", currProgress);
 					SPUtils.putInt("state", DownloadManager.STATE_DOWNLOADING);
-					getNotificationManager().notify(1, setNotification("下载中..."+downloadInfo.name, currProgress).build());
+					getNotificationManager().notify(1, setNotification("下载中..." + downloadInfo.name, currProgress)
+					  .build());
 				}
 				preProgress = currProgress;
 				break;
 			case DownloadManager.STATE_PAUSE:
 				SPUtils.putInt("state", DownloadManager.STATE_PAUSE);
-				getNotificationManager().notify(1, setNotification("下载暂停..."+downloadInfo.name, 0).build());
+				getNotificationManager().notify(1, setNotification("下载暂停..." + downloadInfo.name, 0).build());
 				break;
 			case DownloadManager.STATE_FAIL:
 				SPUtils.putInt("state", DownloadManager.STATE_PAUSE);
-				getNotificationManager().notify(1, setNotification("下载失败..."+downloadInfo.name, 0).build());
+				getNotificationManager().notify(1, setNotification("下载失败..." + downloadInfo.name, 0).build());
 				break;
 			case DownloadManager.STATE_SUCCESS:
 				if (mDownloads != null) {
 					if (checkIsAllDownloaded(mDownloads)) {//所有下载任务已完成
 						SPUtils.putInt("progress", 100);
 						SPUtils.putInt("state", DownloadManager.STATE_SUCCESS);
-						getNotificationManager().notify(1, setNotification("下载成功..."+downloadInfo.name, 100).build());
+						getNotificationManager().notify(1, setNotification("下载成功..." + downloadInfo.name, 100)
+						  .build());
 						UI.showToast("下载成功");
 						EventBus.getDefault().post(new DownloadEvent(EVENT_SUCCESS_4));
 					}
@@ -185,6 +187,7 @@ public class SystemUpdateService extends Service implements DownloadManager.Down
 			createDownloads((SystemModel.Target) SerializeUtils.deSerialize(SPUtils.getString("target")));
 		if (reNameSystemUpdateFile(downloads)) {//重命名合法文件成功
 			System.out.println("重命名合法文件成功");
+			SPUtils.clear();//清除所有记录
 			PowerManager pManager = (PowerManager) getSystemService(Context.POWER_SERVICE); //重启到fastboot模式
 			pManager.reboot("recovery");
 		} else {
@@ -253,7 +256,8 @@ public class SystemUpdateService extends Service implements DownloadManager.Down
 							if (targetList != null && targetList.size() > 0) {
 								SystemModel.Target target = targetList.get(0);//取第一个
 								System.out.println(target.getName());
-								getNotificationManager().notify(1, setNotification("发现新版本"+target.getName(), "点击查看更新详情日志").build());
+								getNotificationManager().notify(1, setNotification("发现新版本" + target.getName(), "点击查看更新详情日志")
+								  .build());
 								return;
 							} else {
 								//暂无更新版本

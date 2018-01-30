@@ -12,7 +12,7 @@ public class ContentDialog {
 	public static final class Builder {
 
 		private Context context;
-		private int height, width;
+		private int height=UI.dip2px(300), width=UI.dip2px(350);
 		private View view;
 		private String title;
 		private String content;
@@ -76,9 +76,6 @@ public class ContentDialog {
 		}
 
 		public BaseCustomDialog build() {
-			if (height <= 0) height = UI.dip2px(250);
-			if (width <= 0) width = UI.dip2px(300);
-
 			final BaseCustomDialog dialog = new BaseCustomDialog.Builder(context).height(height)
 			  .width(width)
 			  .isBackCancelable(true)

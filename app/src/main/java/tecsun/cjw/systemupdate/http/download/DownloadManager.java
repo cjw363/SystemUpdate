@@ -1,5 +1,7 @@
 package tecsun.cjw.systemupdate.http.download;
 
+import android.os.Environment;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -13,6 +15,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.Response;
+import tecsun.cjw.systemupdate.base.BaseApplication;
 import tecsun.cjw.systemupdate.been.DownloadInfo;
 import tecsun.cjw.systemupdate.http.OkHttpUtil;
 import tecsun.cjw.systemupdate.utils.SPUtils;
@@ -152,6 +155,11 @@ public class DownloadManager {
 			File file = new File(downloadInfo.filePath);
 			DownloadCallback downloadCallback = new DownloadCallback(downloadInfo);
 
+			new File(Environment.getDownloadCacheDirectory()
+			  .toString() + "/recovery/" + BaseApplication.command).delete();
+			new File(Environment.getDownloadCacheDirectory().toString() + "/" + BaseApplication.updateZip)
+			  .delete();
+
 			if (file.exists()) {//存在
 				downloadLength = file.length();//得到下载内容的大小
 				if (contentLength == downloadLength) {
@@ -229,17 +237,20 @@ public class DownloadManager {
 			} catch (Exception e) {
 				if (e.getMessage().contains("Socket closed")) {
 					downloadInfo.currentState = STATE_PAUSE;
-					notifyDownloadStateChanged(downloadInfo);// 通知所有观察者，下载状态改变
+				} else if (e.getMessage().contains("open failed: EACCES (Permission denied)")) {
+					downloadInfo.message = "发现无效文件：onResponse--" + e.getMessage() + "，请重新下载";
+					delete(downloadInfo);
+					downloadInfo.currentState = STATE_FAIL;
 				} else {
 					e.printStackTrace();
 					downloadInfo.message = "下载失败：onResponse--" + e.getMessage();
 					downloadInfo.currentState = STATE_FAIL;
-					notifyDownloadStateChanged(downloadInfo);// 通知所有观察者，下载状态改变
 				}
 				//	SocketException: recvfrom failed: ETIMEDOUT  直接断网
 				//IOException: write failed: ENOSPC 硬盘内存不足失败
 				//SocketTimeoutException: timeout
 				//SocketException: Socket closed
+				notifyDownloadStateChanged(downloadInfo);// 通知所有观察者，下载状态改变
 				// 下载失败，移除任务
 				downloadTaskMap.remove(downloadInfo.url);
 			} finally {
