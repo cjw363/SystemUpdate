@@ -48,11 +48,11 @@
 			android:layout_width="250dp"
 			android:layout_height="250dp"
 			android:layout_gravity="center"
-			android:layout_marginTop="10dp"
+			android:layout_marginTop="30dp"
 			app:bgColor="@android:color/darker_gray"
 			app:roundColor="@android:color/holo_red_dark"
 			app:roundTextColor="#18b4ed"
-			app:roundTextSize="16sp"
+			app:roundTextSize="25sp"
 			app:roundWidth="10dp"/>
 	</LinearLayout>
 

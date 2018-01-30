@@ -15,6 +15,8 @@ import okhttp3.Callback;
 import okhttp3.Response;
 import tecsun.cjw.systemupdate.been.DownloadInfo;
 import tecsun.cjw.systemupdate.http.OkHttpUtil;
+import tecsun.cjw.systemupdate.utils.SPUtils;
+import tecsun.cjw.systemupdate.utils.SerializeUtils;
 import tecsun.cjw.systemupdate.utils.UI;
 
 public class DownloadManager {
@@ -58,6 +60,7 @@ public class DownloadManager {
 					}
 					// 获取资源大小
 					downloadInfo.contentLength = response.body().contentLength();
+					SPUtils.putString(downloadInfo.name, SerializeUtils.serialize(downloadInfo));
 					System.out.println(downloadInfo.name + "-downloadInfo.contentLength-" + downloadInfo.contentLength);
 
 					if (!hasDownloadTask(downloadInfo.url)) {//当前没有此下载任务
@@ -154,9 +157,13 @@ public class DownloadManager {
 				if (contentLength == downloadLength) {
 					downloadInfo.currentState = STATE_SUCCESS;
 					notifyDownloadStateChanged(downloadInfo);// 通知所有观察者，下载状态改变
-				} else {//断点续传
+				} else if (downloadLength < contentLength) {//断点续传
 					OkHttpUtil.getInstance()
 					  .downloadFileByRange(downloadInfo.url, downloadLength, contentLength, downloadCallback);
+				} else if (downloadLength > contentLength) {
+					delete(downloadInfo);
+					OkHttpUtil.getInstance()
+					  .downloadFileByRange(downloadInfo.url, 0, contentLength, downloadCallback);
 				}
 			} else {//不存在，从头开始下载
 				OkHttpUtil.getInstance()

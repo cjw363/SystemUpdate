@@ -86,7 +86,7 @@ public class RoundProgress extends View {
 		canvas.drawCircle(mCenterX, mCenterY, mRadius, mPaint);
 		//2、画动态圆弧
 		mPaint.setColor(mRoundColor);
-		canvas.drawArc(mRectF, 0, (float) (3.6 * mProgerss), false, mPaint);
+		canvas.drawArc(mRectF, -90, (float) (3.6 * mProgerss), false, mPaint);
 		//3、画中间的文字
 		mPaint.setColor(mTextColor);
 		mPaint.setStrokeWidth(0);//如果不设置回0，很难看

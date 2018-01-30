@@ -74,6 +74,12 @@ public class MainActivity extends AppCompatActivity implements DownloadManager.D
 		EventBus.getDefault().register(this);
 	}
 
+	@Override
+	protected void onResume() {
+		super.onResume();
+		startService(new Intent(MainActivity.this, SystemUpdateService.class));
+	}
+
 	private void initView() {
 		mTarget = (SystemModel.Target) SerializeUtils.deSerialize(SPUtils.getString("target"));
 		if (mTarget != null) {
@@ -133,6 +139,7 @@ public class MainActivity extends AppCompatActivity implements DownloadManager.D
 				mBtDownload.setText("继续下载");
 				break;
 			case BT_STATE_SUCCESS:
+				if (mDialog != null && mDialog.isShowing()) mDialog.dismiss();
 				mDialog = new ContentDialog.Builder(this).setContent("是否立即重启升级系统")
 				  .setOkListener(new View.OnClickListener() {
 					  @Override
@@ -262,6 +269,7 @@ public class MainActivity extends AppCompatActivity implements DownloadManager.D
 				mBtDownload.setTag(BT_STATE_SUCCESS);
 				mBtDownload.setText("重启升级");
 
+				if (mDialog != null && mDialog.isShowing()) mDialog.dismiss();
 				mDialog = new ContentDialog.Builder(this).setContent("下载成功是否立即重启升级系统")
 				  .setOkListener(new View.OnClickListener() {
 					  @Override
