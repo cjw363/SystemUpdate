@@ -35,7 +35,7 @@ public class ContentDialog {
 			mTvContent = new TextView(context);
 			mTvContent.setTextSize(TypedValue.COMPLEX_UNIT_SP, 18);
 			mTvContent.setTextColor(UI.getColor(R.color.tv_colorPrimary));
-			mTvContent.setMaxLines(3);
+			mTvContent.setMaxLines(4);
 			mTvContent.setGravity(Gravity.CENTER);
 			mRlContent.addView(mTvContent);
 

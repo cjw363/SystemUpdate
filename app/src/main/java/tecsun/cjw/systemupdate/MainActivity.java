@@ -121,14 +121,19 @@ public class MainActivity extends AppCompatActivity implements DownloadManager.D
 				if (NetManager.isConnected(this)) {
 					checkSystemUpdate();//检查更新系统版本
 				} else {
-					mDialog = new ContentDialog.Builder(this).setContent("网络异常！")
+					mDialog = new ContentDialog.Builder(this).setContent("未连接网络！")
 					  .setSingleButton()
 					  .build();
 					mDialog.showDialog();
 				}
 				break;
 			case BT_STATE_START_DOWNLOAD:
-				if (mTarget != null) {
+				if (!NetManager.isConnected(this)) {
+					mDialog = new ContentDialog.Builder(this).setContent("未连接网络！")
+					  .setSingleButton()
+					  .build();
+					mDialog.showDialog();
+				} else if (mTarget != null) {
 					final Intent intent = new Intent(MainActivity.this, SystemUpdateService.class);
 					intent.setAction(SystemUpdateService.INTENT_ACTION_SYSTEM_DOWNLOAD);
 					intent.putExtra("target", mTarget);
@@ -166,7 +171,7 @@ public class MainActivity extends AppCompatActivity implements DownloadManager.D
 				break;
 			case BT_STATE_SUCCESS:
 				if (mDialog != null && mDialog.isShowing()) mDialog.dismiss();
-				mDialog = new ContentDialog.Builder(this).setContent("是否立即重启升级系统")
+				mDialog = new ContentDialog.Builder(this).setContent("是否立即重启升级系统？\r\n\r\n(系统升级可能需要10分钟，请拔掉OTG线，此过程会自动重启，请耐心等待！)")
 				  .setOkListener(new View.OnClickListener() {
 					  @Override
 					  public void onClick(View view) {
@@ -183,6 +188,7 @@ public class MainActivity extends AppCompatActivity implements DownloadManager.D
 	private void checkSystemUpdate() {
 		mLoadingDialog = new CatLoadingView();
 		mLoadingDialog.show(getSupportFragmentManager(), "CatLoadingView");
+		UI.showToast("正在查询，请稍等...");
 		OkHttpUtil.getInstance().doHttp(BaseApplication.systemUpdateUrl, new CommonCallback() {
 			@Override
 			public void _onResponse(Call call, Response response) {
@@ -298,7 +304,7 @@ public class MainActivity extends AppCompatActivity implements DownloadManager.D
 				mBtDownload.setText("重启升级");
 
 				if (mDialog != null && mDialog.isShowing()) mDialog.dismiss();
-				mDialog = new ContentDialog.Builder(this).setContent("下载成功是否立即重启升级系统")
+				mDialog = new ContentDialog.Builder(this).setContent("下载成功是否立即重启升级系统？\r\n\r\n(系统升级可能需要10分钟，请拔掉OTG线，此过程会自动重启，请耐心等待！)")
 				  .setOkListener(new View.OnClickListener() {
 					  @Override
 					  public void onClick(View view) {

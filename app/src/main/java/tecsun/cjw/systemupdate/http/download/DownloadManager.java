@@ -76,7 +76,7 @@ public class DownloadManager {
 					response.body().close();
 				} catch (Exception e) {
 					e.printStackTrace();
-					downloadInfo.message = "响应失败：onResponse--" + e.getMessage();
+					downloadInfo.message = "响应失败：onResponse-" + e.getMessage();
 					downloadInfo.currentState = STATE_FAIL;
 					notifyDownloadStateChanged(downloadInfo);// 通知所有观察者，下载状态改变
 				}
@@ -86,7 +86,7 @@ public class DownloadManager {
 			public void onFailure(Call call, IOException e) {
 				//UnknownHostException: Unable to resolve host "cpzx.e-tecsun.com": No address associated with hostname
 				e.printStackTrace();
-				downloadInfo.message = "响应失败：onFailure--" + e.getMessage();
+				downloadInfo.message = "响应失败：onFailure-" + e.getMessage();
 				downloadInfo.currentState = STATE_FAIL;
 				notifyDownloadStateChanged(downloadInfo);// 通知所有观察者，下载状态改变
 			}
@@ -157,8 +157,8 @@ public class DownloadManager {
 
 			new File(Environment.getDownloadCacheDirectory()
 			  .toString() + "/recovery/" + BaseApplication.command).delete();
-			new File(Environment.getDownloadCacheDirectory().toString() + "/" + BaseApplication.updateZip)
-			  .delete();
+			new File(Environment.getDownloadCacheDirectory()
+			  .toString() + "/" + BaseApplication.updateZip).delete();
 
 			if (file.exists()) {//存在
 				downloadLength = file.length();//得到下载内容的大小
@@ -210,7 +210,6 @@ public class DownloadManager {
 						total += len;
 						savedFile.write(b, 0, len);
 						downloadInfo.currentPos = total;//更新下载进度
-						System.out.println(total);
 						notifyDownloadStateChanged(downloadInfo);// 通知观察者，下载进度发生变化
 					}
 					response.body().close();
@@ -225,7 +224,7 @@ public class DownloadManager {
 						} else {//下载结束的文件大小不对
 							//下载失败
 							downloadInfo.currentState = STATE_FAIL;
-							downloadInfo.message = "下载失败：onResponse--文件大小不一致";
+							downloadInfo.message = "下载失败：文件大小不一致，请重新下载！";
 							notifyDownloadStateChanged(downloadInfo);// 通知观察者，下载进度发生变化
 							delete(downloadInfo);//删除文件
 							System.out.println(downloadInfo.name + "下载失败");
@@ -235,16 +234,21 @@ public class DownloadManager {
 					downloadTaskMap.remove(downloadInfo.url);
 				}
 			} catch (Exception e) {
+				downloadInfo.currentState = STATE_FAIL;
 				if (e.getMessage().contains("Socket closed")) {
 					downloadInfo.currentState = STATE_PAUSE;
 				} else if (e.getMessage().contains("open failed: EACCES (Permission denied)")) {
-					downloadInfo.message = "发现无效文件：onResponse--" + e.getMessage() + "，请重新下载";
+					downloadInfo.message = "下载暂停：发现无效文件,请重新下载 (onResponse-" + e.getMessage() + ")";
 					delete(downloadInfo);
-					downloadInfo.currentState = STATE_FAIL;
+				} else if (e.getMessage().contains("recvfrom failed: ETIMEDOUT")) {
+					downloadInfo.message = "下载暂停：没有发现网络 (onResponse-" + e.getMessage() + ")";
+				} else if (e.getMessage().contains("write failed: ENOSPC")) {
+					downloadInfo.message = "下载失败：硬盘内存不足 (onResponse-" + e.getMessage() + ")";
+				} else if (e.getMessage().contains("timeout")) {
+					downloadInfo.message = "下载失败：连接超时 (onResponse-" + e.getMessage() + ")";
 				} else {
 					e.printStackTrace();
-					downloadInfo.message = "下载失败：onResponse--" + e.getMessage();
-					downloadInfo.currentState = STATE_FAIL;
+					downloadInfo.message = "下载失败：onResponse-" + e.getMessage();
 				}
 				//	SocketException: recvfrom failed: ETIMEDOUT  直接断网
 				//IOException: write failed: ENOSPC 硬盘内存不足失败
@@ -263,7 +267,7 @@ public class DownloadManager {
 			e.printStackTrace();
 			//			mFile.delete();// 删除无效文件
 			call.cancel();
-			downloadInfo.message = "下载失败：onFailure--" + e.getMessage();
+			downloadInfo.message = "下载失败：onFailure-" + e.getMessage();
 			downloadInfo.currentState = STATE_FAIL;
 			notifyDownloadStateChanged(downloadInfo);// 通知所有观察者，下载状态改变
 

@@ -188,6 +188,7 @@ public class SystemUpdateService extends Service implements DownloadManager.Down
 		if (reNameSystemUpdateFile(downloads)) {//重命名合法文件成功
 			System.out.println("重命名合法文件成功");
 			SPUtils.clear();//清除所有记录
+			UI.showToast("将要重启，请不要断电！");
 			PowerManager pManager = (PowerManager) getSystemService(Context.POWER_SERVICE); //重启到fastboot模式
 			pManager.reboot("recovery");
 		} else {
@@ -255,7 +256,6 @@ public class SystemUpdateService extends Service implements DownloadManager.Down
 							List<SystemModel.Target> targetList = system.getTagetList();
 							if (targetList != null && targetList.size() > 0) {
 								SystemModel.Target target = targetList.get(0);//取第一个
-								System.out.println(target.getName());
 								getNotificationManager().notify(1, setNotification("发现新版本" + target.getName(), "点击查看更新详情日志")
 								  .build());
 								return;
