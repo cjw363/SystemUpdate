@@ -111,6 +111,12 @@ public class MainActivity extends AppCompatActivity implements DownloadManager.D
 					mBtDownload.setTag(BT_STATE_SUCCESS);
 					mBtDownload.setText("重启升级");
 					break;
+				default:
+					mTvVersionName.setText(Build.DISPLAY);
+					mTvTip.setText("(当前版本)");
+					mBtDownload.setTag(BT_STATE_CHECK_UPDATE);
+					mBtDownload.setText("检查更新");
+					break;
 			}
 		} else {
 			mTvVersionName.setText(Build.DISPLAY);
@@ -191,9 +197,9 @@ public class MainActivity extends AppCompatActivity implements DownloadManager.D
 	}
 
 	private void checkSystemUpdate() {
+		UI.showToast("正在查询，请稍等...");
 		mLoadingDialog = new CatLoadingView();
 		mLoadingDialog.show(getSupportFragmentManager(), "CatLoadingView");
-		UI.showToast("正在查询，请稍等...");
 		OkHttpUtil.getInstance().doHttp(BaseApplication.systemUpdateUrl, new CommonCallback() {
 			@Override
 			public void _onResponse(Call call, Response response) {
@@ -283,7 +289,6 @@ public class MainActivity extends AppCompatActivity implements DownloadManager.D
 				preProgress = currProgress;
 
 				if (System.currentTimeMillis() - preTime > 1000) {
-					if (preRxBytes == 0) preRxBytes = SPUtils.getInt("download_bytes");
 					mRpDownload.setMobileBytes((TrafficStats.getUidRxBytes(getApplicationInfo().uid) - preRxBytes) / 1024);
 					preTime = System.currentTimeMillis();
 					preRxBytes = TrafficStats.getUidRxBytes(getApplicationInfo().uid);

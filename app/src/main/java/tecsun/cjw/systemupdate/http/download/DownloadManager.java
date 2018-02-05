@@ -247,9 +247,9 @@ public class DownloadManager {
 				} else if (e.getMessage().contains("timeout")) {
 					downloadInfo.message = "下载失败：连接超时 (onResponse-" + e.getMessage() + ")";
 				} else {
-					e.printStackTrace();
 					downloadInfo.message = "下载失败：onResponse-" + e.getMessage();
 				}
+				e.printStackTrace();
 				//	SocketException: recvfrom failed: ETIMEDOUT  直接断网
 				//IOException: write failed: ENOSPC 硬盘内存不足失败
 				//SocketTimeoutException: timeout
@@ -285,7 +285,6 @@ public class DownloadManager {
 		file.delete();
 
 		downloadInfo.currentPos = 0;
-		downloadInfo.currentState = STATE_UNDO;
 	}
 
 	/**
