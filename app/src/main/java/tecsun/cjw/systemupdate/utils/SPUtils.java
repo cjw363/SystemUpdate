@@ -3,6 +3,12 @@ package tecsun.cjw.systemupdate.utils;
 import android.content.Context;
 import android.content.SharedPreferences;
 
+/**
+ * target-对象
+ * progress-进度
+ * state-下载状态
+ * 版本号-password
+ */
 public class SPUtils {
 
 	public static void putString(String key, String str) {

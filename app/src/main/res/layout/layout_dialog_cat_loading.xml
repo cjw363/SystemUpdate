@@ -28,7 +28,7 @@
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
 			android:layout_marginLeft="3.5dp"
-			android:layout_marginTop="12.5dp"
+			android:layout_marginTop="14.5dp"
 			android:src="@drawable/eyes"/>
 
 		<tecsun.cjw.systemupdate.view.catloading.EyelidView
@@ -43,8 +43,8 @@
 			android:id="@+id/eye_right"
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
-			android:layout_marginLeft="28dp"
-			android:layout_marginTop="12.5dp"
+			android:layout_marginLeft="38dp"
+			android:layout_marginTop="14.5dp"
 			android:src="@drawable/eyes"/>
 
 		<tecsun.cjw.systemupdate.view.catloading.EyelidView

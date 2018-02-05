@@ -4,8 +4,10 @@ import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.text.TextUtils;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
 
 import org.greenrobot.eventbus.EventBus;
@@ -62,6 +64,7 @@ public class MainActivity extends AppCompatActivity implements DownloadManager.D
 	private SystemModel.Target mTarget;
 	private BaseCustomDialog mDialog;
 	private CatLoadingView mLoadingDialog;
+	private BaseCustomDialog mPasswordDialog;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -126,10 +129,34 @@ public class MainActivity extends AppCompatActivity implements DownloadManager.D
 				break;
 			case BT_STATE_START_DOWNLOAD:
 				if (mTarget != null) {
-					Intent intent = new Intent(MainActivity.this, SystemUpdateService.class);
+					final Intent intent = new Intent(MainActivity.this, SystemUpdateService.class);
 					intent.setAction(SystemUpdateService.INTENT_ACTION_SYSTEM_DOWNLOAD);
 					intent.putExtra("target", mTarget);
-					startService(intent);
+
+					String password = SPUtils.getString(mTarget.getName());
+
+					if (TextUtils.isEmpty(password)) {//说明第一次下载，还没有输入密码
+						mPasswordDialog = new ContentDialog.Builder(this).setTitle("请输入密码")
+						  .contentView(R.layout.layout_dialog_edittext)
+						  .setOkListener(new View.OnClickListener() {
+							  @Override
+							  public void onClick(View view) {
+								  EditText editText = (EditText) mPasswordDialog.getView(R.id.et_password);
+								  String passwordEt = editText.getText().toString();
+								  if (mTarget.getPassword().equals(passwordEt)) {
+									  SPUtils.putString(mTarget.getName(), passwordEt);
+									  startService(intent);
+								  } else {
+									  UI.showToast("密码输入有误");
+								  }
+								  mPasswordDialog.dismiss();
+							  }
+						  })
+						  .build();
+						mPasswordDialog.showDialog();
+					} else {
+						startService(intent);
+					}
 				}
 				break;
 			case BT_STATE_PAUSE:
