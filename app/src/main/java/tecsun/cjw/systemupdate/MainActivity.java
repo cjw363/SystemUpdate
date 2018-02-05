@@ -1,6 +1,7 @@
 package tecsun.cjw.systemupdate;
 
 import android.content.Intent;
+import android.net.TrafficStats;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -65,6 +66,8 @@ public class MainActivity extends AppCompatActivity implements DownloadManager.D
 	private BaseCustomDialog mDialog;
 	private CatLoadingView mLoadingDialog;
 	private BaseCustomDialog mPasswordDialog;
+	private long preTime = 0;
+	private long preRxBytes = 0;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -81,6 +84,8 @@ public class MainActivity extends AppCompatActivity implements DownloadManager.D
 	protected void onResume() {
 		super.onResume();
 		startService(new Intent(MainActivity.this, SystemUpdateService.class));
+		preTime = System.currentTimeMillis();
+		preRxBytes = TrafficStats.getUidRxBytes(getApplicationInfo().uid);
 	}
 
 	private void initView() {
@@ -276,8 +281,16 @@ public class MainActivity extends AppCompatActivity implements DownloadManager.D
 					mRpDownload.setProgress((int) (progress * 100));
 				}
 				preProgress = currProgress;
+
+				if (System.currentTimeMillis() - preTime > 1000) {
+					if (preRxBytes == 0) preRxBytes = SPUtils.getInt("download_bytes");
+					mRpDownload.setMobileBytes((TrafficStats.getUidRxBytes(getApplicationInfo().uid) - preRxBytes) / 1024);
+					preTime = System.currentTimeMillis();
+					preRxBytes = TrafficStats.getUidRxBytes(getApplicationInfo().uid);
+				}
 				break;
 			case DownloadManager.STATE_PAUSE:
+				mRpDownload.setMobileBytes(0);
 				break;
 			case DownloadManager.STATE_FAIL:
 				mBtDownload.setTag(BT_STATE_START_DOWNLOAD);
@@ -287,6 +300,7 @@ public class MainActivity extends AppCompatActivity implements DownloadManager.D
 				  .setSingleButton()
 				  .build();
 				mDialog.showDialog();
+				mRpDownload.setMobileBytes(0);
 				break;
 			case DownloadManager.STATE_SUCCESS:
 				break;

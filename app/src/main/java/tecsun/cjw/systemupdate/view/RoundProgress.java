@@ -27,7 +27,8 @@ public class RoundProgress extends View {
 	private int mCenterX;
 	private float mRadius;
 	private RectF mRectF;
-	private int mProgerss = 0;
+	private int mProgress = 0;
+	private double mMobileBytes = 0;
 
 	public RoundProgress(Context context) {
 		this(context, null);
@@ -86,18 +87,30 @@ public class RoundProgress extends View {
 		canvas.drawCircle(mCenterX, mCenterY, mRadius, mPaint);
 		//2、画动态圆弧
 		mPaint.setColor(mRoundColor);
-		canvas.drawArc(mRectF, -90, (float) (3.6 * mProgerss), false, mPaint);
+		canvas.drawArc(mRectF, -90, (float) (3.6 * mProgress), false, mPaint);
 		//3、画中间的文字
 		mPaint.setColor(mTextColor);
 		mPaint.setStrokeWidth(0);//如果不设置回0，很难看
 		mPaint.setTextSize(mTextSize);
 		//测量字体的宽度
-		float width = mPaint.measureText(mProgerss + "%");
-		canvas.drawText(mProgerss + "%", mCenterX - width / 2, mCenterY + mTextSize / 2, mPaint);
+		float width = mPaint.measureText(mProgress + "%");
+		canvas.drawText(mProgress + "%", mCenterX - width / 2, mCenterY + mTextSize / 2, mPaint);
+
+		//流量
+		mPaint.setColor(Color.GRAY);
+		mPaint.setStrokeWidth(0);//如果不设置回0，很难看
+		mPaint.setTextSize(16);
+		float width2 = mPaint.measureText(mMobileBytes + "kb/s");
+		canvas.drawText(mMobileBytes + "kb/s", mCenterX - width2 / 2, mCenterY + mTextSize * 2, mPaint);
 	}
 
-	public void setProgress(int progerss) {
-		mProgerss = progerss;
+	public void setProgress(int progress) {
+		mProgress = progress;
+		postInvalidate();
+	}
+
+	public void setMobileBytes(double mobileBytes) {
+		mMobileBytes = mobileBytes;
 		postInvalidate();
 	}
 }
