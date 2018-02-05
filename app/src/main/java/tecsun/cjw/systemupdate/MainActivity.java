@@ -150,7 +150,6 @@ public class MainActivity extends AppCompatActivity implements DownloadManager.D
 					intent.putExtra("target", mTarget);
 
 					String password = SPUtils.getString(mTarget.getName());
-
 					if (TextUtils.isEmpty(password)) {//说明第一次下载，还没有输入密码
 						mPasswordDialog = new ContentDialog.Builder(this).setTitle("请输入密码")
 						  .contentView(R.layout.layout_dialog_edittext)
