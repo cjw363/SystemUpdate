@@ -235,19 +235,21 @@ public class DownloadManager {
 				}
 			} catch (Exception e) {
 				downloadInfo.currentState = STATE_FAIL;
-				if (e.getMessage().contains("Socket closed")) {
+				String message = e.getMessage();
+				if (message == null) message = "null";
+				if (message.contains("Socket closed")) {
 					downloadInfo.currentState = STATE_PAUSE;
-				} else if (e.getMessage().contains("open failed: EACCES (Permission denied)")) {
-					downloadInfo.message = "下载暂停：发现无效文件,请重新下载 (onResponse-" + e.getMessage() + ")";
+				} else if (message.contains("open failed: EACCES (Permission denied)")) {
+					downloadInfo.message = "下载暂停：发现无效文件,请重新下载 (onResponse-" + message + ")";
 					delete(downloadInfo);
-				} else if (e.getMessage().contains("recvfrom failed: ETIMEDOUT")) {
-					downloadInfo.message = "下载暂停：没有发现网络 (onResponse-" + e.getMessage() + ")";
-				} else if (e.getMessage().contains("write failed: ENOSPC")) {
-					downloadInfo.message = "下载失败：硬盘内存不足 (onResponse-" + e.getMessage() + ")";
-				} else if (e.getMessage().contains("timeout")) {
-					downloadInfo.message = "下载失败：连接超时 (onResponse-" + e.getMessage() + ")";
+				} else if (message.contains("recvfrom failed: ETIMEDOUT")) {
+					downloadInfo.message = "下载暂停：没有发现网络 (onResponse-" + message + ")";
+				} else if (message.contains("write failed: ENOSPC")) {
+					downloadInfo.message = "下载失败：硬盘内存不足 (onResponse-" + message + ")";
+				} else if (message.contains("timeout")) {
+					downloadInfo.message = "下载失败：连接超时 (onResponse-" + message + ")";
 				} else {
-					downloadInfo.message = "下载失败：onResponse-" + e.getMessage();
+					downloadInfo.message = "下载失败：onResponse-" + message;
 				}
 				e.printStackTrace();
 				//	SocketException: recvfrom failed: ETIMEDOUT  直接断网
