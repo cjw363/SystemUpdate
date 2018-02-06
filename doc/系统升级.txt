@@ -1,0 +1,48 @@
+wifi	:	TEST	密码：588488test
+服务器地址		：	192.168.4.254
+					http://cpzx.e-tecsun.com:8037/update/TA/
+TecSun TA V1.2.x	：	1G+8G
+TecSun TA V1.5.x	：	2G+8G
+TecSun TA V1.6.x	：	2G+16G
+文件加里面
+	command		：	/cache/recovery/
+	update.zip	：	/cache/
+	// 获取当前系统版本号
+		currVersion = android.os.Build.DISPLAY;
+	// 重启手机
+	<uses-permission android:name="android.permission.REBOOT" />
+	PowerManager pManager = (PowerManager) getSystemService(Context.POWER_SERVICE); // 重启到fastboot模式
+	pManager.reboot("recovery");
+
+
+
+java -jar signapk.jar platform.x509.pem platform.pk8 app-debug.apk app.apk
+
+adb install D:/signapktools/app.apk
+
+//开机自动检查服务器有没有新的系统，有的话在导航栏提醒
+//断点下载
+
+<system name="TecSun TA V1.2.11 Build20170816">			//一个系统
+        <address>http://cpzx.e-tecsun.com:8037/update/TA/TecSun TA V1.2.11 Build20170816/</address>	//下载网址
+		<description>.增加双目摄像头同时打开功能</description>		//更新的内容
+		<password>tecsun</password>		//密码
+		<hwsupport>invalid</hwsupport>	//如果定义invalid，调过这个版本
+		<formemory>1G</formemory>		//之前有一部分2G+8G的机器刷了TecSun TA V1.2.7 Build20170111，
+		<buildfor>TecSun TA V1.2.8 Build20170227</buildfor> //哪些版本可以升级到这个系统
+		<buildfor>TecSun TA V1.2.9 Build20170411</buildfor> 
+		<buildfor>TecSun TA V1.2.9 Build20170428</buildfor> 
+		<buildfor>TecSun TA V1.2.10 Build20170728</buildfor> 
+</system>
+
+测试
+//在各种网络下测试
+//断网
+
+
+1.开机检查更新，读xml，有的话在导航栏提醒
+2.进入app检查更新，读xml
+3.下载
+
+
+f  ctrl+c r
