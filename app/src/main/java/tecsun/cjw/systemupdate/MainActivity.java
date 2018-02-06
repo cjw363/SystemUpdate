@@ -16,6 +16,7 @@ import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import butterknife.BindView;
@@ -159,11 +160,9 @@ public class MainActivity extends AppCompatActivity implements DownloadManager.D
 		}
 	}
 
-	private void startDownload(){
+	private void startDownload() {
 		if (!NetManager.isConnected(this)) {
-			mDialog = new ContentDialog.Builder(this).setContent("未连接网络！")
-			  .setSingleButton()
-			  .build();
+			mDialog = new ContentDialog.Builder(this).setContent("未连接网络！").setSingleButton().build();
 			mDialog.showDialog();
 		} else if (mTarget != null) {
 			final Intent intent = new Intent(MainActivity.this, SystemUpdateService.class);
@@ -210,13 +209,23 @@ public class MainActivity extends AppCompatActivity implements DownloadManager.D
 					  .byteStream());
 					String currVersion = Build.DISPLAY;
 					mLoadingDialog.dismiss();
+
+					List<SystemModel> updateLogList = new ArrayList<>();//更新日志列表
+					boolean flag = false;
+					SystemModel.Target target = null;
 					for (SystemModel system : systemModels) {
+						if (flag) {
+							updateLogList.add(system);
+							if (target != null && target.getName().equals(system.getName())) {
+								showNewSystemUpdate(target, updateLogList);
+								return;
+							}
+						}
 						if (currVersion.equals(system.getName())) {
+							flag = true;
 							List<SystemModel.Target> targetList = system.getTagetList();
 							if (targetList != null && targetList.size() > 0) {
-								SystemModel.Target target = targetList.get(0);//取第一个
-								showNewSystemUpdate(target);
-								return;
+								target = targetList.get(0);//取第一个
 							} else {
 								//暂无更新版本
 								showNonSystemUpdate();
@@ -257,16 +266,24 @@ public class MainActivity extends AppCompatActivity implements DownloadManager.D
 		});
 	}
 
-	private void showNewSystemUpdate(final SystemModel.Target target) {
+	private void showNewSystemUpdate(final SystemModel.Target target, final List<SystemModel> updateLogList) {
 		UI.runOnUIThread(new Runnable() {
 			@Override
 			public void run() {
+				StringBuilder sb = new StringBuilder();
+				sb.append("更新日志 :\r\n\n");
+				for (SystemModel system : updateLogList) {
+					sb.append(system.getName());
+					sb.append("\r\n\n");
+					sb.append("功能描述—");
+					sb.append(system.getDescription());
+					sb.append("\r\n\n");
+				}
 				View view = View.inflate(MainActivity.this, R.layout.layout_dialog_scroll_content, null);
 				((TextView) view.findViewById(R.id.tv_version_name)).setText("有新的版本 :" + target.getName());
-				((TextView) view.findViewById(R.id.tv_version_description)).setText("更新日志 :\r\n\n" + target
-				  .getDescription());
+				((TextView) view.findViewById(R.id.tv_version_description)).setText(sb.toString());
 				mDialog = new ContentDialog.Builder(MainActivity.this).width(600)
-				  .height(350)
+				  .height(500)
 				  .setTitle("发现新版本")
 				  .contentView(view)
 				  .setOkListener("下载", new View.OnClickListener() {
