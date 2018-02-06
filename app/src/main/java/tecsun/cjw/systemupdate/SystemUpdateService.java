@@ -241,7 +241,6 @@ public class SystemUpdateService extends Service implements DownloadManager.Down
 		return true;
 	}
 
-
 	private void checkSystemUpdate() {
 		OkHttpUtil.getInstance().doHttp(BaseApplication.systemUpdateUrl, new Callback() {
 			@Override
