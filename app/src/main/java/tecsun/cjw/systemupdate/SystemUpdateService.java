@@ -130,7 +130,7 @@ public class SystemUpdateService extends Service implements DownloadManager.Down
 				if (mDownloads != null) DownloadManager.getInstance().cancel(mDownloads);
 				break;
 			case EVENT_SUCCESS_TO_UPDATE_5:
-				rebootToUpdate(mDownloads);
+				rebootToUpdate();
 				break;
 		}
 	}
@@ -182,10 +182,10 @@ public class SystemUpdateService extends Service implements DownloadManager.Down
 		}
 	}
 
-	private void rebootToUpdate(final List<DownloadInfo> downloads) {
-		if (downloads == null)
+	private void rebootToUpdate() {
+		if (mDownloads == null)
 			createDownloads((SystemModel.Target) SerializeUtils.deSerialize(SPUtils.getString("target")));
-		if (reNameSystemUpdateFile(downloads)) {//重命名合法文件成功
+		if (reNameSystemUpdateFile(mDownloads)) {//重命名合法文件成功
 			System.out.println("重命名合法文件成功");
 			SPUtils.clear();//清除所有记录
 			UI.showToast("将要重启，请不要断电！");

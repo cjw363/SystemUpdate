@@ -11,6 +11,8 @@
 		android:layout_marginTop="10dp"
 		android:padding="10dp"
 		android:text="提示"
+		android:textSize="18sp"
+	  android:textColor="@color/colorPrimary"
 		/>
 
 	<RelativeLayout
@@ -20,7 +22,7 @@
 		android:layout_above="@id/bottom"
 		android:layout_below="@id/title"
 		android:gravity="center"
-	  android:padding="10dp"
+		android:padding="10dp"
 		>
 	</RelativeLayout>
 
@@ -59,6 +61,7 @@
 				android:layout_weight="1.0"
 				android:gravity="center"
 				android:text="取消"
+				android:textSize="18sp"
 				/>
 
 			<TextView
@@ -68,7 +71,8 @@
 				android:layout_height="match_parent"
 				android:layout_weight="1.0"
 				android:gravity="center"
-				android:text="确定"/>
+				android:text="确定"
+				android:textSize="18sp"/>
 
 		</LinearLayout>
 	</LinearLayout>

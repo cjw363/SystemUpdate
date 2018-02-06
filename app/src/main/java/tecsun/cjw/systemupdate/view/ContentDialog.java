@@ -39,8 +39,8 @@ public class ContentDialog {
 			mTvContent.setGravity(Gravity.CENTER);
 			mRlContent.addView(mTvContent);
 
-			mParams = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
-			mParams.addRule(RelativeLayout.CENTER_IN_PARENT);
+			mParams = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.MATCH_PARENT);
+//			mParams.addRule(RelativeLayout.CENTER_IN_PARENT);
 		}
 
 		public Builder contentView(int resId) {
@@ -91,6 +91,12 @@ public class ContentDialog {
 		}
 
 		public Builder setOkListener(View.OnClickListener listener) {
+			this.okListener = listener;
+			return this;
+		}
+
+		public Builder setOkListener(String btName, View.OnClickListener listener) {
+			((TextView) view.findViewById(R.id.ok)).setText(btName);
 			this.okListener = listener;
 			return this;
 		}

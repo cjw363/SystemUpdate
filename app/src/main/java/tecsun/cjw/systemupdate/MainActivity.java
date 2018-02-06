@@ -54,8 +54,6 @@ public class MainActivity extends AppCompatActivity implements DownloadManager.D
 	TextView mTvVersionName;
 	@BindView(R.id.tv_tip)
 	TextView mTvTip;
-	@BindView(R.id.tv_version_description)
-	TextView mTvVersionDescription;
 	@BindView(R.id.rp_download)
 	RoundProgress mRpDownload;
 	@BindView(R.id.bt_download)
@@ -93,7 +91,6 @@ public class MainActivity extends AppCompatActivity implements DownloadManager.D
 		if (mTarget != null) {
 			mTvVersionName.setText(mTarget.getName());
 			mTvTip.setText("(新版本)");
-			mTvVersionDescription.setText(mTarget.getDescription());
 
 			int progress = SPUtils.getInt("progress");
 			int state = SPUtils.getInt("state");
@@ -139,40 +136,7 @@ public class MainActivity extends AppCompatActivity implements DownloadManager.D
 				}
 				break;
 			case BT_STATE_START_DOWNLOAD:
-				if (!NetManager.isConnected(this)) {
-					mDialog = new ContentDialog.Builder(this).setContent("未连接网络！")
-					  .setSingleButton()
-					  .build();
-					mDialog.showDialog();
-				} else if (mTarget != null) {
-					final Intent intent = new Intent(MainActivity.this, SystemUpdateService.class);
-					intent.setAction(SystemUpdateService.INTENT_ACTION_SYSTEM_DOWNLOAD);
-					intent.putExtra("target", mTarget);
-
-					String password = SPUtils.getString(mTarget.getName());
-					if (TextUtils.isEmpty(password)) {//说明第一次下载，还没有输入密码
-						mPasswordDialog = new ContentDialog.Builder(this).setTitle("请输入密码")
-						  .contentView(R.layout.layout_dialog_edittext)
-						  .setOkListener(new View.OnClickListener() {
-							  @Override
-							  public void onClick(View view) {
-								  EditText editText = (EditText) mPasswordDialog.getView(R.id.et_password);
-								  String passwordEt = editText.getText().toString();
-								  if (mTarget.getPassword().equals(passwordEt)) {
-									  SPUtils.putString(mTarget.getName(), passwordEt);
-									  startService(intent);
-								  } else {
-									  UI.showToast("密码输入有误");
-								  }
-								  mPasswordDialog.dismiss();
-							  }
-						  })
-						  .build();
-						mPasswordDialog.showDialog();
-					} else {
-						startService(intent);
-					}
-				}
+				startDownload();
 				break;
 			case BT_STATE_PAUSE:
 				EventBus.getDefault().post(new DownloadEvent(EVENT_PAUSE_2));
@@ -192,6 +156,44 @@ public class MainActivity extends AppCompatActivity implements DownloadManager.D
 				  .build();
 				mDialog.showDialog();
 				break;
+		}
+	}
+
+	private void startDownload(){
+		if (!NetManager.isConnected(this)) {
+			mDialog = new ContentDialog.Builder(this).setContent("未连接网络！")
+			  .setSingleButton()
+			  .build();
+			mDialog.showDialog();
+		} else if (mTarget != null) {
+			final Intent intent = new Intent(MainActivity.this, SystemUpdateService.class);
+			intent.setAction(SystemUpdateService.INTENT_ACTION_SYSTEM_DOWNLOAD);
+			intent.putExtra("target", mTarget);
+
+			String password = SPUtils.getString(mTarget.getName());
+			if (TextUtils.isEmpty(password)) {//说明第一次下载，还没有输入密码
+				mPasswordDialog = new ContentDialog.Builder(this).height(250)
+				  .setTitle("请输入密码")
+				  .contentView(R.layout.layout_dialog_edittext)
+				  .setOkListener(new View.OnClickListener() {
+					  @Override
+					  public void onClick(View view) {
+						  EditText editText = (EditText) mPasswordDialog.getView(R.id.et_password);
+						  String passwordEt = editText.getText().toString();
+						  if (mTarget.getPassword().equals(passwordEt)) {
+							  SPUtils.putString(mTarget.getName(), passwordEt);
+							  startService(intent);
+						  } else {
+							  UI.showToast("密码输入有误");
+						  }
+						  mPasswordDialog.dismiss();
+					  }
+				  })
+				  .build();
+				mPasswordDialog.showDialog();
+			} else {
+				startService(intent);
+			}
 		}
 	}
 
@@ -259,9 +261,26 @@ public class MainActivity extends AppCompatActivity implements DownloadManager.D
 		UI.runOnUIThread(new Runnable() {
 			@Override
 			public void run() {
+				View view = View.inflate(MainActivity.this, R.layout.layout_dialog_scroll_content, null);
+				((TextView) view.findViewById(R.id.tv_version_name)).setText("有新的版本 :" + target.getName());
+				((TextView) view.findViewById(R.id.tv_version_description)).setText("更新日志 :\r\n\n" + target
+				  .getDescription());
+				mDialog = new ContentDialog.Builder(MainActivity.this).width(600)
+				  .height(350)
+				  .setTitle("发现新版本")
+				  .contentView(view)
+				  .setOkListener("下载", new View.OnClickListener() {
+					  @Override
+					  public void onClick(View view) {
+						  mDialog.dismiss();
+						  startDownload();
+					  }
+				  })
+				  .build();
+				mDialog.showDialog();
+
 				mTvVersionName.setText(target.getName());
-				mTvTip.setText("(发现新版本)");
-				mTvVersionDescription.setText(target.getDescription());
+				mTvTip.setText("(新版本)");
 				mBtDownload.setTag(BT_STATE_START_DOWNLOAD);
 				mBtDownload.setText("开始下载");
 			}
