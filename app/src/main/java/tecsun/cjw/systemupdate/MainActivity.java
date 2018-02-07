@@ -229,6 +229,7 @@ public class MainActivity extends AppCompatActivity implements DownloadManager.D
 							} else {
 								//暂无更新版本
 								showNonSystemUpdate();
+								return;
 							}
 						}
 					}
