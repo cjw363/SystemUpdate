@@ -232,10 +232,17 @@ public class MainActivity extends AppCompatActivity implements DownloadManager.D
 							}
 						}
 					}
-				} catch (Exception e) {
+				} catch (final Exception e) {
 					e.printStackTrace();
-					System.out.println("检查更新失败");
-					mLoadingDialog.dismiss();
+					UI.runOnUIThread(new Runnable() {
+						@Override
+						public void run() {
+							mLoadingDialog.dismiss();
+							mDialog = new ContentDialog.Builder(MainActivity.this).setContent("检查更新失败 :(" + e
+							  .getMessage() + ")").setSingleButton().build();
+							mDialog.showDialog();
+						}
+					});
 				}
 			}
 
@@ -243,7 +250,7 @@ public class MainActivity extends AppCompatActivity implements DownloadManager.D
 			public void _onFailure(Call call, IOException e) {
 				e.printStackTrace();
 				mLoadingDialog.dismiss();
-				mDialog = new ContentDialog.Builder(MainActivity.this).setContent("检查更新失败")
+				mDialog = new ContentDialog.Builder(MainActivity.this).setContent("检查更新失败 :(" + e.getMessage() + ")")
 				  .setSingleButton()
 				  .build();
 				mDialog.showDialog();
