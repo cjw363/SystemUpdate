@@ -32,6 +32,7 @@ import tecsun.cjw.systemupdate.been.DownloadInfo;
 import tecsun.cjw.systemupdate.http.NetManager;
 import tecsun.cjw.systemupdate.http.OkHttpUtil;
 import tecsun.cjw.systemupdate.http.download.DownloadManager;
+import tecsun.cjw.systemupdate.utils.BitmapUtil;
 import tecsun.cjw.systemupdate.utils.FileUtil;
 import tecsun.cjw.systemupdate.utils.SPUtils;
 import tecsun.cjw.systemupdate.utils.SerializeUtils;
@@ -300,7 +301,7 @@ public class SystemUpdateService extends Service implements DownloadManager.Down
 			//设置通知的小图标
 			mNotifBuilder.setSmallIcon(R.mipmap.ic_launcher);
 			//设置通知的大图标，当下拉系统状态栏时，就可以看到设置的大图标
-			mNotifBuilder.setLargeIcon(BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher));
+			mNotifBuilder.setLargeIcon(BitmapUtil.setImgSize(BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher), 0.7f));
 			//当通知被点击的时候，跳转到MainActivity中
 			mNotifBuilder.setContentIntent(pi);
 		}
