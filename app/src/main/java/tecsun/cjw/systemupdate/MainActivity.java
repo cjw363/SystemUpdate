@@ -213,9 +213,12 @@ public class MainActivity extends AppCompatActivity implements DownloadManager.D
 					List<SystemModel> updateLogList = new ArrayList<>();//更新日志列表
 					boolean flag = false;
 					SystemModel.Target target = null;
+					SystemModel currSystem = null;
 					for (SystemModel system : systemModels) {
 						if (flag) {
-							updateLogList.add(system);
+							if (currSystem.getForMemory().equals(system.getForMemory())) {//需要是同一个内存版本
+								updateLogList.add(system);
+							}
 							if (target != null && target.getName().equals(system.getName())) {
 								showNewSystemUpdate(target, updateLogList);
 								return;
@@ -223,6 +226,7 @@ public class MainActivity extends AppCompatActivity implements DownloadManager.D
 						}
 						if (currVersion.equals(system.getName())) {
 							flag = true;
+							currSystem = system;
 							List<SystemModel.Target> targetList = system.getTagetList();
 							if (targetList != null && targetList.size() > 0) {
 								target = targetList.get(0);//取第一个
