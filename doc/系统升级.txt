@@ -15,7 +15,6 @@ TecSun TA V1.6.x	£º	2G+16G
 	pManager.reboot("recovery");
 
 
-
 java -jar signapk.jar platform.x509.pem platform.pk8 app-debug.apk app.apk
 
 adb install D:/signapktools/app.apk
