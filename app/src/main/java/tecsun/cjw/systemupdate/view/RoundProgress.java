@@ -29,6 +29,7 @@ public class RoundProgress extends View {
 	private RectF mRectF;
 	private int mProgress = 0;
 	private double mMobileBytes = 0;
+	private int mMobileBytesVisible = 0;
 
 	public RoundProgress(Context context) {
 		this(context, null);
@@ -97,7 +98,11 @@ public class RoundProgress extends View {
 		canvas.drawText(mProgress + "%", mCenterX - width / 2, mCenterY + mTextSize / 2, mPaint);
 
 		//流量
-		mPaint.setColor(Color.GRAY);
+		if (mMobileBytesVisible == View.VISIBLE) {
+			mPaint.setColor(Color.GRAY);
+		} else if (mMobileBytesVisible == View.INVISIBLE) {
+			mPaint.setColor(Color.TRANSPARENT);
+		}
 		mPaint.setStrokeWidth(0);//如果不设置回0，很难看
 		mPaint.setTextSize(16);
 		float width2 = mPaint.measureText(mMobileBytes + "kb/s");
@@ -111,6 +116,11 @@ public class RoundProgress extends View {
 
 	public void setMobileBytes(double mobileBytes) {
 		mMobileBytes = mobileBytes;
+		postInvalidate();
+	}
+
+	public void setMobileBytesVisible(int visible) {
+		mMobileBytesVisible = visible;
 		postInvalidate();
 	}
 }

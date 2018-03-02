@@ -155,10 +155,8 @@ public class DownloadManager {
 			File file = new File(downloadInfo.filePath);
 			DownloadCallback downloadCallback = new DownloadCallback(downloadInfo);
 
-			new File(Environment.getDownloadCacheDirectory()
-			  .toString() + "/recovery/" + BaseApplication.command).delete();
-			new File(Environment.getDownloadCacheDirectory()
-			  .toString() + "/" + BaseApplication.updateZip).delete();
+			new File(Environment.getDownloadCacheDirectory().toString() + "/recovery/" + BaseApplication.command).delete();
+			new File(Environment.getDownloadCacheDirectory().toString() + "/" + BaseApplication.updateZip).delete();
 
 			if (file.exists()) {//存在
 				downloadLength = file.length();//得到下载内容的大小
@@ -166,16 +164,13 @@ public class DownloadManager {
 					downloadInfo.currentState = STATE_SUCCESS;
 					notifyDownloadStateChanged(downloadInfo);// 通知所有观察者，下载状态改变
 				} else if (downloadLength < contentLength) {//断点续传
-					OkHttpUtil.getInstance()
-					  .downloadFileByRange(downloadInfo.url, downloadLength, contentLength, downloadCallback);
+					OkHttpUtil.getInstance().downloadFileByRange(downloadInfo.url, downloadLength, contentLength, downloadCallback);
 				} else if (downloadLength > contentLength) {
 					delete(downloadInfo);
-					OkHttpUtil.getInstance()
-					  .downloadFileByRange(downloadInfo.url, 0, contentLength, downloadCallback);
+					OkHttpUtil.getInstance().downloadFileByRange(downloadInfo.url, 0, contentLength, downloadCallback);
 				}
 			} else {//不存在，从头开始下载
-				OkHttpUtil.getInstance()
-				  .downloadFileByRange(downloadInfo.url, 0, contentLength, downloadCallback);
+				OkHttpUtil.getInstance().downloadFileByRange(downloadInfo.url, 0, contentLength, downloadCallback);
 			}
 		}
 	}
@@ -349,6 +344,10 @@ public class DownloadManager {
 	public boolean hasDownloadTask(String url) {
 		if (downloadTaskMap.get(url) != null) return true;
 		else return false;
+	}
+
+	public boolean hasDownloadTask() {
+		return downloadTaskMap.size() > 0;
 	}
 
 	public Long getTotalContentLength() {

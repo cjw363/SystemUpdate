@@ -98,12 +98,16 @@ public class MainActivity extends AppCompatActivity implements DownloadManager.D
 			mRpDownload.setProgress(progress);
 			switch (state) {
 				case DownloadManager.STATE_DOWNLOADING:
-					mBtDownload.setTag(BT_STATE_PAUSE);
-					mBtDownload.setText("暂停下载");
-					break;
 				case DownloadManager.STATE_PAUSE:
-					mBtDownload.setTag(BT_STATE_START_DOWNLOAD);
-					mBtDownload.setText("继续下载");
+					if (DownloadManager.getInstance().hasDownloadTask()) {
+						mBtDownload.setTag(BT_STATE_PAUSE);
+						mBtDownload.setText("暂停下载");
+						mRpDownload.setMobileBytesVisible(View.VISIBLE);
+					} else {//防止意外退出
+						mBtDownload.setTag(BT_STATE_START_DOWNLOAD);
+						mBtDownload.setText("继续下载");
+						mRpDownload.setMobileBytesVisible(View.INVISIBLE);
+					}
 					break;
 				case DownloadManager.STATE_SUCCESS:
 					mBtDownload.setTag(BT_STATE_SUCCESS);
@@ -130,9 +134,7 @@ public class MainActivity extends AppCompatActivity implements DownloadManager.D
 				if (NetManager.isConnected(this)) {
 					checkSystemUpdate();//检查更新系统版本
 				} else {
-					mDialog = new ContentDialog.Builder(this).setContent("未连接网络！")
-					  .setSingleButton()
-					  .build();
+					mDialog = new ContentDialog.Builder(this).setContent("未连接网络！").setSingleButton().build();
 					mDialog.showDialog();
 				}
 				break;
@@ -143,18 +145,17 @@ public class MainActivity extends AppCompatActivity implements DownloadManager.D
 				EventBus.getDefault().post(new DownloadEvent(EVENT_PAUSE_2));
 				mBtDownload.setTag(BT_STATE_START_DOWNLOAD);
 				mBtDownload.setText("继续下载");
+				mRpDownload.setMobileBytesVisible(View.INVISIBLE);
 				break;
 			case BT_STATE_SUCCESS:
 				if (mDialog != null && mDialog.isShowing()) mDialog.dismiss();
-				mDialog = new ContentDialog.Builder(this).setContent("是否立即重启升级系统？\r\n\r\n(系统升级可能需要10分钟，请拔掉OTG线，此过程会自动重启，请耐心等待！)")
-				  .setOkListener(new View.OnClickListener() {
-					  @Override
-					  public void onClick(View view) {
-						  EventBus.getDefault().post(new DownloadEvent(EVENT_SUCCESS_TO_UPDATE_5));
-						  mDialog.dismiss();
-					  }
-				  })
-				  .build();
+				mDialog = new ContentDialog.Builder(this).setContent("是否立即重启升级系统？\r\n\r\n(系统升级可能需要10分钟，请拔掉OTG线，此过程会自动重启，请耐心等待！)").setOkListener(new View.OnClickListener() {
+					@Override
+					public void onClick(View view) {
+						EventBus.getDefault().post(new DownloadEvent(EVENT_SUCCESS_TO_UPDATE_5));
+						mDialog.dismiss();
+					}
+				}).build();
 				mDialog.showDialog();
 				break;
 		}
@@ -171,24 +172,20 @@ public class MainActivity extends AppCompatActivity implements DownloadManager.D
 
 			String password = SPUtils.getString(mTarget.getName());
 			if (TextUtils.isEmpty(password)) {//说明第一次下载，还没有输入密码
-				mPasswordDialog = new ContentDialog.Builder(this).height(250)
-				  .setTitle("请输入密码")
-				  .contentView(R.layout.layout_dialog_edittext)
-				  .setOkListener(new View.OnClickListener() {
-					  @Override
-					  public void onClick(View view) {
-						  EditText editText = (EditText) mPasswordDialog.getView(R.id.et_password);
-						  String passwordEt = editText.getText().toString();
-						  if (mTarget.getPassword().equals(passwordEt)) {
-							  SPUtils.putString(mTarget.getName(), passwordEt);
-							  startService(intent);
-						  } else {
-							  UI.showToast("密码输入有误");
-						  }
-						  mPasswordDialog.dismiss();
-					  }
-				  })
-				  .build();
+				mPasswordDialog = new ContentDialog.Builder(this).height(250).setTitle("请输入密码").contentView(R.layout.layout_dialog_edittext).setOkListener(new View.OnClickListener() {
+					@Override
+					public void onClick(View view) {
+						EditText editText = (EditText) mPasswordDialog.getView(R.id.et_password);
+						String passwordEt = editText.getText().toString();
+						if (mTarget.getPassword().equals(passwordEt)) {
+							SPUtils.putString(mTarget.getName(), passwordEt);
+							startService(intent);
+						} else {
+							UI.showToast("密码输入有误");
+						}
+						mPasswordDialog.dismiss();
+					}
+				}).build();
 				mPasswordDialog.showDialog();
 			} else {
 				startService(intent);
@@ -204,9 +201,7 @@ public class MainActivity extends AppCompatActivity implements DownloadManager.D
 			@Override
 			public void _onResponse(Call call, Response response) {
 				try {
-					List<SystemModel> systemModels = new SaxUpdateXmlParser().parse(MainActivity.this, response
-					  .body()
-					  .byteStream());
+					List<SystemModel> systemModels = new SaxUpdateXmlParser().parse(MainActivity.this, response.body().byteStream());
 					String currVersion = Build.DISPLAY;
 					mLoadingDialog.dismiss();
 
@@ -243,8 +238,7 @@ public class MainActivity extends AppCompatActivity implements DownloadManager.D
 						@Override
 						public void run() {
 							mLoadingDialog.dismiss();
-							mDialog = new ContentDialog.Builder(MainActivity.this).setContent("检查更新失败 :(" + e
-							  .getMessage() + ")").setSingleButton().build();
+							mDialog = new ContentDialog.Builder(MainActivity.this).setContent("检查更新失败 :(" + e.getMessage() + ")").setSingleButton().build();
 							mDialog.showDialog();
 						}
 					});
@@ -255,9 +249,7 @@ public class MainActivity extends AppCompatActivity implements DownloadManager.D
 			public void _onFailure(Call call, IOException e) {
 				e.printStackTrace();
 				mLoadingDialog.dismiss();
-				mDialog = new ContentDialog.Builder(MainActivity.this).setContent("检查更新失败 :(" + e.getMessage() + ")")
-				  .setSingleButton()
-				  .build();
+				mDialog = new ContentDialog.Builder(MainActivity.this).setContent("检查更新失败 :(" + e.getMessage() + ")").setSingleButton().build();
 				mDialog.showDialog();
 			}
 		});
@@ -268,9 +260,7 @@ public class MainActivity extends AppCompatActivity implements DownloadManager.D
 			@Override
 			public void run() {
 				mTvVersionName.setText(Build.DISPLAY);
-				mDialog = new ContentDialog.Builder(MainActivity.this).setContent("暂无新版本")
-				  .setSingleButton()
-				  .build();
+				mDialog = new ContentDialog.Builder(MainActivity.this).setContent("暂无新版本").setSingleButton().build();
 				mDialog.showDialog();
 				mBtDownload.setEnabled(false);
 				mBtDownload.setClickable(false);
@@ -294,18 +284,13 @@ public class MainActivity extends AppCompatActivity implements DownloadManager.D
 				View view = View.inflate(MainActivity.this, R.layout.layout_dialog_scroll_content, null);
 				((TextView) view.findViewById(R.id.tv_version_name)).setText("有新的版本 :" + target.getName());
 				((TextView) view.findViewById(R.id.tv_version_description)).setText(sb.toString());
-				mDialog = new ContentDialog.Builder(MainActivity.this).width(600)
-				  .height(500)
-				  .setTitle("发现新版本")
-				  .contentView(view)
-				  .setOkListener("下载", new View.OnClickListener() {
-					  @Override
-					  public void onClick(View view) {
-						  mDialog.dismiss();
-						  startDownload();
-					  }
-				  })
-				  .build();
+				mDialog = new ContentDialog.Builder(MainActivity.this).width(600).height(500).setTitle("发现新版本").contentView(view).setOkListener("下载", new View.OnClickListener() {
+					@Override
+					public void onClick(View view) {
+						mDialog.dismiss();
+						startDownload();
+					}
+				}).build();
 				mDialog.showDialog();
 
 				mTvVersionName.setText(target.getName());
@@ -325,10 +310,10 @@ public class MainActivity extends AppCompatActivity implements DownloadManager.D
 			case DownloadManager.STATE_WAITING:
 				mBtDownload.setTag(BT_STATE_PAUSE);
 				mBtDownload.setText("暂停下载");
+				mRpDownload.setMobileBytesVisible(View.VISIBLE);
 				break;
 			case DownloadManager.STATE_DOWNLOADING:
-				float progress = (downloadInfo.currentPos / (float) DownloadManager.getInstance()
-				  .getTotalContentLength());
+				float progress = (downloadInfo.currentPos / (float) DownloadManager.getInstance().getTotalContentLength());
 				int currProgress = (int) (progress * 100);
 				if (preProgress < currProgress) {
 					mRpDownload.setProgress((int) (progress * 100));
@@ -348,9 +333,7 @@ public class MainActivity extends AppCompatActivity implements DownloadManager.D
 				mBtDownload.setTag(BT_STATE_START_DOWNLOAD);
 				mBtDownload.setText("继续下载");
 				if (mDialog != null && mDialog.isShowing()) mDialog.dismiss();
-				mDialog = new ContentDialog.Builder(this).setContent(downloadInfo.message)
-				  .setSingleButton()
-				  .build();
+				mDialog = new ContentDialog.Builder(this).setContent(downloadInfo.message).setSingleButton().build();
 				mDialog.showDialog();
 				mRpDownload.setMobileBytes(0);
 				break;
@@ -370,15 +353,13 @@ public class MainActivity extends AppCompatActivity implements DownloadManager.D
 				mBtDownload.setText("重启升级");
 
 				if (mDialog != null && mDialog.isShowing()) mDialog.dismiss();
-				mDialog = new ContentDialog.Builder(this).setContent("下载成功是否立即重启升级系统？\r\n\r\n(系统升级可能需要10分钟，请拔掉OTG线，此过程会自动重启，请耐心等待！)")
-				  .setOkListener(new View.OnClickListener() {
-					  @Override
-					  public void onClick(View view) {
-						  EventBus.getDefault().post(new DownloadEvent(EVENT_SUCCESS_TO_UPDATE_5));
-						  mDialog.dismiss();
-					  }
-				  })
-				  .build();
+				mDialog = new ContentDialog.Builder(this).setContent("下载成功是否立即重启升级系统？\r\n\r\n(系统升级可能需要10分钟，请拔掉OTG线，此过程会自动重启，请耐心等待！)").setOkListener(new View.OnClickListener() {
+					@Override
+					public void onClick(View view) {
+						EventBus.getDefault().post(new DownloadEvent(EVENT_SUCCESS_TO_UPDATE_5));
+						mDialog.dismiss();
+					}
+				}).build();
 				mDialog.showDialog();
 				break;
 		}
