@@ -29,7 +29,7 @@ public class RoundProgress extends View {
 	private RectF mRectF;
 	private int mProgress = 0;
 	private double mMobileBytes = 0;
-	private int mMobileBytesVisible = 0;
+	private int mMobileBytesVisible = View.INVISIBLE;
 
 	public RoundProgress(Context context) {
 		this(context, null);
