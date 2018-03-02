@@ -19,7 +19,10 @@ public class FileUtil {
 				if (oleFileName.contains("-")) {
 					String[] split2 = oleFileName.split("-");
 					String newFileName = split2[split2.length - 1];//update.zip
-					return reNameFile(pathName, path + "/" + newFileName);
+					if(newFileName.contains("command")){
+						return  reNameFile(pathName, path + "/recovery/" + newFileName);
+					}else
+						return reNameFile(pathName, path + "/" + newFileName);
 				} else {//已经修改好的
 					return true;
 				}

@@ -155,7 +155,7 @@ public class DownloadManager {
 			File file = new File(downloadInfo.filePath);
 			DownloadCallback downloadCallback = new DownloadCallback(downloadInfo);
 
-			new File(Environment.getDownloadCacheDirectory().toString() + "/recovery/" + BaseApplication.command).delete();
+			new File(Environment.getDownloadCacheDirectory().toString() + "/" + BaseApplication.command).delete();
 			new File(Environment.getDownloadCacheDirectory().toString() + "/" + BaseApplication.updateZip).delete();
 
 			if (file.exists()) {//存在

@@ -102,10 +102,8 @@ public class SystemUpdateService extends Service implements DownloadManager.Down
 			/**
 			 * 保存的文件名是版本号-如update.zip:TecSun TA V1.2.12 Build20171130-update.zip
 			 */
-			mDownloads.add(createDownloadInfo(BaseApplication.command, target.getName() + "-" + BaseApplication.command, target
-			  .getAddr(), "/recovery/"));///recovery/
-			mDownloads.add(createDownloadInfo(BaseApplication.updateZip, target.getName() + "-" + BaseApplication.updateZip, target
-			  .getAddr(), "/"));
+			mDownloads.add(createDownloadInfo(BaseApplication.command, target.getName() + "-" + BaseApplication.command, target.getAddr(), "/"));///recovery/
+			mDownloads.add(createDownloadInfo(BaseApplication.updateZip, target.getName() + "-" + BaseApplication.updateZip, target.getAddr(), "/"));
 		}
 	}
 
@@ -113,8 +111,7 @@ public class SystemUpdateService extends Service implements DownloadManager.Down
 		DownloadInfo downloadInfo = new DownloadInfo();
 		downloadInfo.name = tempName;
 		downloadInfo.url = url + name;
-		downloadInfo.filePath = Environment.getDownloadCacheDirectory()
-		  .toString() + path + downloadInfo.name;
+		downloadInfo.filePath = Environment.getDownloadCacheDirectory().toString() + path + downloadInfo.name;
 		return downloadInfo;
 	}
 
@@ -145,15 +142,13 @@ public class SystemUpdateService extends Service implements DownloadManager.Down
 				getNotificationManager().notify(1, setNotification("等待下载..." + downloadInfo.name, 0).build());
 				break;
 			case DownloadManager.STATE_DOWNLOADING:
-				float progress = (downloadInfo.currentPos / (float) DownloadManager.getInstance()
-				  .getTotalContentLength());
+				float progress = (downloadInfo.currentPos / (float) DownloadManager.getInstance().getTotalContentLength());
 				int currProgress = (int) (progress * 100);
 				if (preProgress < currProgress) {
 					System.out.println(currProgress);
 					SPUtils.putInt("progress", currProgress);
 					SPUtils.putInt("state", DownloadManager.STATE_DOWNLOADING);
-					getNotificationManager().notify(1, setNotification("下载中..." + downloadInfo.name, currProgress)
-					  .build());
+					getNotificationManager().notify(1, setNotification("下载中..." + downloadInfo.name, currProgress).build());
 				}
 				preProgress = currProgress;
 				break;
@@ -170,8 +165,7 @@ public class SystemUpdateService extends Service implements DownloadManager.Down
 					if (checkIsAllDownloaded(mDownloads)) {//所有下载任务已完成
 						SPUtils.putInt("progress", 100);
 						SPUtils.putInt("state", DownloadManager.STATE_SUCCESS);
-						getNotificationManager().notify(1, setNotification("下载成功..." + downloadInfo.name, 100)
-						  .build());
+						getNotificationManager().notify(1, setNotification("下载成功..." + downloadInfo.name, 100).build());
 						UI.showToast("下载成功");
 						EventBus.getDefault().post(new DownloadEvent(EVENT_SUCCESS_4));
 					}
@@ -181,6 +175,12 @@ public class SystemUpdateService extends Service implements DownloadManager.Down
 				getNotificationManager().cancel(1);
 				break;
 		}
+	}
+
+	@Override
+	public void onTaskRemoved(Intent rootIntent) {//当用户移除应用的一个Task栈时被调用
+		if (mNotifBuilder != null) getNotificationManager().cancel(1);
+		super.onTaskRemoved(rootIntent);
 	}
 
 	private void rebootToUpdate() {
@@ -194,16 +194,14 @@ public class SystemUpdateService extends Service implements DownloadManager.Down
 			pManager.reboot("recovery");
 		} else {
 			if (mDialog != null && mDialog.isShowing()) mDialog.dismiss();
-			mDialog = new ContentDialog.Builder(this).setContent("文件拷贝失败，是否重新下载？")
-			  .setOkListener(new View.OnClickListener() {
-				  @Override
-				  public void onClick(View view) {
-					  deleteAll(mDownloads);
-					  DownloadManager.getInstance().download(mDownloads);
-					  mDialog.dismiss();
-				  }
-			  })
-			  .build();
+			mDialog = new ContentDialog.Builder(this).setContent("文件拷贝失败，是否重新下载？").setOkListener(new View.OnClickListener() {
+				@Override
+				public void onClick(View view) {
+					deleteAll(mDownloads);
+					DownloadManager.getInstance().download(mDownloads);
+					mDialog.dismiss();
+				}
+			}).build();
 			mDialog.getWindow().setType((WindowManager.LayoutParams.TYPE_SYSTEM_ALERT));
 			mDialog.showDialog();
 		}
@@ -213,10 +211,8 @@ public class SystemUpdateService extends Service implements DownloadManager.Down
 		for (DownloadInfo downloadInfo : downloads) {
 			new File(downloadInfo.filePath).delete();
 		}
-		new File(Environment.getDownloadCacheDirectory()
-		  .toString() + "/recovery/" + BaseApplication.command).delete();
-		new File(Environment.getDownloadCacheDirectory().toString() + "/" + BaseApplication.updateZip)
-		  .delete();
+		new File(Environment.getDownloadCacheDirectory().toString() + "/" + BaseApplication.command).delete();
+		new File(Environment.getDownloadCacheDirectory().toString() + "/" + BaseApplication.updateZip).delete();
 	}
 
 	private boolean checkIsAllDownloaded(List<DownloadInfo> downloads) {
@@ -247,17 +243,14 @@ public class SystemUpdateService extends Service implements DownloadManager.Down
 			@Override
 			public void onResponse(Call call, Response response) {
 				try {
-					List<SystemModel> systemModels = new SaxUpdateXmlParser().parse(SystemUpdateService.this, response
-					  .body()
-					  .byteStream());
+					List<SystemModel> systemModels = new SaxUpdateXmlParser().parse(SystemUpdateService.this, response.body().byteStream());
 					String currVersion = android.os.Build.DISPLAY;
 					for (SystemModel system : systemModels) {
 						if (currVersion.equals(system.getName())) {
 							List<SystemModel.Target> targetList = system.getTagetList();
 							if (targetList != null && targetList.size() > 0) {
 								SystemModel.Target target = targetList.get(0);//取第一个
-								getNotificationManager().notify(1, setNotification("发现新版本" + target.getName(), "点击查看更新详情日志")
-								  .build());
+								getNotificationManager().notify(1, setNotification("发现新版本" + target.getName(), "点击查看更新详情日志").build());
 								return;
 							} else {
 								//暂无更新版本
