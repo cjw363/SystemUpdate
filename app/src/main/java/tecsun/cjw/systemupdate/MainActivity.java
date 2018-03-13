@@ -316,7 +316,7 @@ public class MainActivity extends AppCompatActivity implements DownloadManager.D
 				float progress = (downloadInfo.currentPos / (float) DownloadManager.getInstance().getTotalContentLength());
 				int currProgress = (int) (progress * 100);
 				if (preProgress < currProgress) {
-					mRpDownload.setProgress((int) (progress * 100));
+					mRpDownload.setProgress(currProgress);
 				}
 				preProgress = currProgress;
 
