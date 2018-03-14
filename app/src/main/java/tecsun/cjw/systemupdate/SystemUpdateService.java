@@ -43,6 +43,7 @@ import tecsun.cjw.systemupdate.view.BaseCustomDialog;
 import tecsun.cjw.systemupdate.view.ContentDialog;
 
 import static tecsun.cjw.systemupdate.been.DownloadEvent.EVENT_CANCEL_3;
+import static tecsun.cjw.systemupdate.been.DownloadEvent.EVENT_DOWNLOADING_PROGRESS_6;
 import static tecsun.cjw.systemupdate.been.DownloadEvent.EVENT_DOWNLOAD_1;
 import static tecsun.cjw.systemupdate.been.DownloadEvent.EVENT_PAUSE_2;
 import static tecsun.cjw.systemupdate.been.DownloadEvent.EVENT_SUCCESS_4;
@@ -148,6 +149,10 @@ public class SystemUpdateService extends Service implements DownloadManager.Down
 					System.out.println(currProgress);
 					SPUtils.putInt("progress", currProgress);
 					SPUtils.putInt("state", DownloadManager.STATE_DOWNLOADING);
+
+					DownloadEvent event = new DownloadEvent(EVENT_DOWNLOADING_PROGRESS_6);
+					event.value=currProgress;
+					EventBus.getDefault().post(event);
 					getNotificationManager().notify(1, setNotification("下载中..." + downloadInfo.name, currProgress).build());
 				}
 				preProgress = currProgress;
@@ -297,6 +302,7 @@ public class SystemUpdateService extends Service implements DownloadManager.Down
 			mNotifBuilder.setLargeIcon(BitmapUtil.setImgSize(BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher), 0.7f));
 			//当通知被点击的时候，跳转到MainActivity中
 			mNotifBuilder.setContentIntent(pi);
+			mNotifBuilder.setOngoing(true);//设置它为一个正在进行的通知，通常表示一个后台任务，用户积极参与（如播放音乐）或以某种方式正在等待，因此占用设备（如一个文件下载，同步操作，主动网络连接）。
 		}
 		return mNotifBuilder;
 	}

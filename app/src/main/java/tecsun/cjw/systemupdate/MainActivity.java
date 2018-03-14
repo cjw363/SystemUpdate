@@ -40,6 +40,7 @@ import tecsun.cjw.systemupdate.view.ContentDialog;
 import tecsun.cjw.systemupdate.view.RoundProgress;
 import tecsun.cjw.systemupdate.view.catloading.CatLoadingView;
 
+import static tecsun.cjw.systemupdate.been.DownloadEvent.EVENT_DOWNLOADING_PROGRESS_6;
 import static tecsun.cjw.systemupdate.been.DownloadEvent.EVENT_PAUSE_2;
 import static tecsun.cjw.systemupdate.been.DownloadEvent.EVENT_SUCCESS_4;
 import static tecsun.cjw.systemupdate.been.DownloadEvent.EVENT_SUCCESS_TO_UPDATE_5;
@@ -313,12 +314,12 @@ public class MainActivity extends AppCompatActivity implements DownloadManager.D
 				mRpDownload.setMobileBytesVisible(View.VISIBLE);
 				break;
 			case DownloadManager.STATE_DOWNLOADING:
-				float progress = (downloadInfo.currentPos / (float) DownloadManager.getInstance().getTotalContentLength());
-				int currProgress = (int) (progress * 100);
-				if (preProgress < currProgress) {
-					mRpDownload.setProgress(currProgress);
-				}
-				preProgress = currProgress;
+//				float progress = (downloadInfo.currentPos / (float) DownloadManager.getInstance().getTotalContentLength());
+//				int currProgress = (int) (progress * 100);
+//				if (preProgress < currProgress) {
+//					mRpDownload.setProgress(currProgress);
+//				}
+//				preProgress = currProgress;
 
 				if (System.currentTimeMillis() - preTime > 1000) {
 					mRpDownload.setMobileBytes((TrafficStats.getUidRxBytes(getApplicationInfo().uid) - preRxBytes) / 1024);
@@ -349,6 +350,7 @@ public class MainActivity extends AppCompatActivity implements DownloadManager.D
 		switch (event.what) {
 			case EVENT_SUCCESS_4:
 				mRpDownload.setProgress(100);
+				mRpDownload.setMobileBytesVisible(View.INVISIBLE);
 				mBtDownload.setTag(BT_STATE_SUCCESS);
 				mBtDownload.setText("重启升级");
 
@@ -361,6 +363,9 @@ public class MainActivity extends AppCompatActivity implements DownloadManager.D
 					}
 				}).build();
 				mDialog.showDialog();
+				break;
+			case EVENT_DOWNLOADING_PROGRESS_6:
+				mRpDownload.setProgress(event.value);
 				break;
 		}
 	}
