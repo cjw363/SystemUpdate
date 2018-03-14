@@ -302,6 +302,7 @@ public class SystemUpdateService extends Service implements DownloadManager.Down
 			mNotifBuilder.setLargeIcon(BitmapUtil.setImgSize(BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher), 0.7f));
 			//当通知被点击的时候，跳转到MainActivity中
 			mNotifBuilder.setContentIntent(pi);
+
 			mNotifBuilder.setOngoing(true);//设置它为一个正在进行的通知，通常表示一个后台任务，用户积极参与（如播放音乐）或以某种方式正在等待，因此占用设备（如一个文件下载，同步操作，主动网络连接）。
 		}
 		return mNotifBuilder;
