@@ -14,7 +14,6 @@ TecSun TA V1.6.x	：	2G+16G
 	PowerManager pManager = (PowerManager) getSystemService(Context.POWER_SERVICE); // 重启到fastboot模式
 	pManager.reboot("recovery");
 
-
 java -jar signapk.jar platform.x509.pem platform.pk8 app-debug.apk app.apk
 
 adb install D:/signapktools/app.apk
