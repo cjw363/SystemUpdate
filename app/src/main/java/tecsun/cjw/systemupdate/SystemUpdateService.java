@@ -7,7 +7,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.BitmapFactory;
 import android.os.Environment;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
+import android.os.Message;
 import android.os.PowerManager;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
@@ -56,6 +59,7 @@ public class SystemUpdateService extends Service implements DownloadManager.Down
 
 	private NotificationCompat.Builder mNotifBuilder;
 	private int preProgress = 0;//用来记录之前的下载进度，总进度为100，如果相同则不需要频繁更新，避免卡顿
+	private long preTime = 0;
 	private List<DownloadInfo> mDownloads;
 	private boolean boot = false;//开机第一次
 	private BaseCustomDialog mDialog;
@@ -67,6 +71,14 @@ public class SystemUpdateService extends Service implements DownloadManager.Down
 		public void onConnected() {
 			if (!boot) checkSystemUpdate();//检查更新系统版本
 			boot = true;
+		}
+	};
+	private Handler mHandler = new Handler(Looper.getMainLooper()) {
+		@Override
+		public void handleMessage(Message msg) {
+			if (0 == msg.what) {
+				rebootToUpdate();
+			}
 		}
 	};
 
@@ -129,7 +141,6 @@ public class SystemUpdateService extends Service implements DownloadManager.Down
 				if (mDownloads != null) DownloadManager.getInstance().cancel(mDownloads);
 				break;
 			case EVENT_SUCCESS_TO_UPDATE_5:
-				rebootToUpdate();
 				break;
 		}
 	}
@@ -143,19 +154,31 @@ public class SystemUpdateService extends Service implements DownloadManager.Down
 				getNotificationManager().notify(1, setNotification("等待下载..." + downloadInfo.name, 0).build());
 				break;
 			case DownloadManager.STATE_DOWNLOADING:
-				float progress = (downloadInfo.currentPos / (float) DownloadManager.getInstance().getTotalContentLength());
-				int currProgress = (int) (progress * 100);
-				if (preProgress < currProgress) {
-					System.out.println(currProgress);
-					SPUtils.putInt("progress", currProgress);
-					SPUtils.putInt("state", DownloadManager.STATE_DOWNLOADING);
+				Long contentLength = DownloadManager.getInstance().getTotalContentLength();
+				if (34 == contentLength) return;//这时只下载了command
 
-					DownloadEvent event = new DownloadEvent(EVENT_DOWNLOADING_PROGRESS_6);
-					event.value=currProgress;
-					EventBus.getDefault().post(event);
-					getNotificationManager().notify(1, setNotification("下载中..." + downloadInfo.name, currProgress).build());
+				try {
+					if (System.currentTimeMillis() - preTime > 1000) {
+						float progress = (downloadInfo.currentPos / (float) contentLength);
+						int currProgress = (int) (progress * 100);
+						if (preProgress < currProgress) {
+							System.out.println("currProgress-" + currProgress);
+							SPUtils.putInt("progress", currProgress);
+							SPUtils.putInt("state", DownloadManager.STATE_DOWNLOADING);
+
+							DownloadEvent event = new DownloadEvent(EVENT_DOWNLOADING_PROGRESS_6);
+							event.value = currProgress;
+							EventBus.getDefault().post(event);
+							getNotificationManager().notify(1, setNotification("下载中..." + downloadInfo.name, currProgress).build());
+						}
+						preProgress = currProgress;
+						preTime = System.currentTimeMillis();
+					}
+				} catch (Exception e) {
+					e.printStackTrace();
+					System.out.println(e.getMessage());
 				}
-				preProgress = currProgress;
+
 				break;
 			case DownloadManager.STATE_PAUSE:
 				SPUtils.putInt("state", DownloadManager.STATE_PAUSE);
@@ -166,14 +189,21 @@ public class SystemUpdateService extends Service implements DownloadManager.Down
 				getNotificationManager().notify(1, setNotification("下载失败..." + downloadInfo.name, 0).build());
 				break;
 			case DownloadManager.STATE_SUCCESS:
-				if (mDownloads != null) {
-					if (checkIsAllDownloaded(mDownloads)) {//所有下载任务已完成
-						SPUtils.putInt("progress", 100);
-						SPUtils.putInt("state", DownloadManager.STATE_SUCCESS);
-						getNotificationManager().notify(1, setNotification("下载成功..." + downloadInfo.name, 100).build());
-						UI.showToast("下载成功");
-						EventBus.getDefault().post(new DownloadEvent(EVENT_SUCCESS_4));
+				try {
+					if (mDownloads != null) {
+						if (checkIsAllDownloaded(mDownloads)) {//所有下载任务已完成
+							SPUtils.putInt("progress", 100);
+							SPUtils.putInt("state", DownloadManager.STATE_SUCCESS);
+							getNotificationManager().notify(1, setNotification("下载成功..." + downloadInfo.name, 100).build());
+							EventBus.getDefault().post(new DownloadEvent(EVENT_SUCCESS_4));
+							//							UI.showToast("下载成功");
+							UI.showToast("将要重启，请不要断电！");
+							mHandler.sendEmptyMessageDelayed(0, 1000);
+						}
 					}
+				} catch (Exception e) {
+					e.printStackTrace();
+					System.out.println(e.getMessage());
 				}
 				break;
 			case DownloadManager.STATE_CANCEL:
@@ -194,7 +224,6 @@ public class SystemUpdateService extends Service implements DownloadManager.Down
 		if (reNameSystemUpdateFile(mDownloads)) {//重命名合法文件成功
 			System.out.println("重命名合法文件成功");
 			SPUtils.clear();//清除所有记录
-			UI.showToast("将要重启，请不要断电！");
 			PowerManager pManager = (PowerManager) getSystemService(Context.POWER_SERVICE); //重启到fastboot模式
 			pManager.reboot("recovery");
 		} else {
@@ -216,7 +245,7 @@ public class SystemUpdateService extends Service implements DownloadManager.Down
 		for (DownloadInfo downloadInfo : downloads) {
 			new File(downloadInfo.filePath).delete();
 		}
-		new File(Environment.getDownloadCacheDirectory().toString() + "/" + BaseApplication.command).delete();
+		new File(Environment.getDownloadCacheDirectory().toString() + "/recovery/" + BaseApplication.command).delete();
 		new File(Environment.getDownloadCacheDirectory().toString() + "/" + BaseApplication.updateZip).delete();
 	}
 

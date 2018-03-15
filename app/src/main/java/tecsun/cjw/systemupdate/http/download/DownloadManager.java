@@ -104,12 +104,12 @@ public class DownloadManager {
 					ThreadManager.getInstance().cancel(downloadTask);
 				}
 				OkHttpUtil.getInstance().cancel(downloadInfo.url);//会报warn
-				downloadTaskMap.remove(downloadInfo.url);
 
 				downloadInfo.currentState = STATE_PAUSE;
 				notifyDownloadStateChanged(downloadInfo);// 通知所有观察者，下载状态改变
 				System.out.println(downloadInfo.name + "下载暂停");
 			}
+			downloadTaskMap.remove(downloadInfo.url);
 		}
 	}
 
@@ -155,7 +155,7 @@ public class DownloadManager {
 			File file = new File(downloadInfo.filePath);
 			DownloadCallback downloadCallback = new DownloadCallback(downloadInfo);
 
-			new File(Environment.getDownloadCacheDirectory().toString() + "/" + BaseApplication.command).delete();
+			new File(Environment.getDownloadCacheDirectory().toString() + "/recovery/" + BaseApplication.command).delete();
 			new File(Environment.getDownloadCacheDirectory().toString() + "/" + BaseApplication.updateZip).delete();
 
 			if (file.exists()) {//存在

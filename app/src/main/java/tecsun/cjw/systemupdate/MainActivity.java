@@ -314,14 +314,17 @@ public class MainActivity extends AppCompatActivity implements DownloadManager.D
 				mRpDownload.setMobileBytesVisible(View.VISIBLE);
 				break;
 			case DownloadManager.STATE_DOWNLOADING:
-//				float progress = (downloadInfo.currentPos / (float) DownloadManager.getInstance().getTotalContentLength());
-//				int currProgress = (int) (progress * 100);
-//				if (preProgress < currProgress) {
-//					mRpDownload.setProgress(currProgress);
-//				}
-//				preProgress = currProgress;
+				Long contentLength = DownloadManager.getInstance().getTotalContentLength();
+				if (34 == contentLength) return;//这时只下载了command
 
 				if (System.currentTimeMillis() - preTime > 1000) {
+//					float progress = (downloadInfo.currentPos / (float) contentLength);
+//					int currProgress = (int) (progress * 100);
+//					if (preProgress < currProgress) {
+//						System.out.println("MainActivity-" + currProgress);
+//						mRpDownload.setProgress(currProgress);
+//					}
+//					preProgress = currProgress;
 					mRpDownload.setMobileBytes((TrafficStats.getUidRxBytes(getApplicationInfo().uid) - preRxBytes) / 1024);
 					preTime = System.currentTimeMillis();
 					preRxBytes = TrafficStats.getUidRxBytes(getApplicationInfo().uid);
@@ -354,15 +357,18 @@ public class MainActivity extends AppCompatActivity implements DownloadManager.D
 				mBtDownload.setTag(BT_STATE_SUCCESS);
 				mBtDownload.setText("重启升级");
 
-				if (mDialog != null && mDialog.isShowing()) mDialog.dismiss();
-				mDialog = new ContentDialog.Builder(this).setContent("下载成功是否立即重启升级系统？\r\n\r\n(系统升级可能需要10分钟，请拔掉OTG线，此过程会自动重启，请耐心等待！)").setOkListener(new View.OnClickListener() {
-					@Override
-					public void onClick(View view) {
-						EventBus.getDefault().post(new DownloadEvent(EVENT_SUCCESS_TO_UPDATE_5));
-						mDialog.dismiss();
-					}
-				}).build();
-				mDialog.showDialog();
+				/**
+				 * 不弹框直接升级
+				 */
+				//				if (mDialog != null && mDialog.isShowing()) mDialog.dismiss();
+				//				mDialog = new ContentDialog.Builder(this).setContent("下载成功是否立即重启升级系统？\r\n\r\n(系统升级可能需要10分钟，请拔掉OTG线，此过程会自动重启，请耐心等待！)").setOkListener(new View.OnClickListener() {
+				//					@Override
+				//					public void onClick(View view) {
+				//						EventBus.getDefault().post(new DownloadEvent(EVENT_SUCCESS_TO_UPDATE_5));
+				//						mDialog.dismiss();
+				//					}
+				//				}).build();
+				//				mDialog.showDialog();
 				break;
 			case EVENT_DOWNLOADING_PROGRESS_6:
 				mRpDownload.setProgress(event.value);

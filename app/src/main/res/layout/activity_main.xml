@@ -37,11 +37,11 @@
 		android:orientation="vertical"
 		android:padding="30dp">
 
-		<!--	<TextView
-				android:id="@+id/tv_version_description"
-				style="@style/tv_normal"
-				android:layout_gravity="center_horizontal"
-				/>-->
+		<TextView
+			style="@style/tv_normal"
+			android:layout_gravity="center_horizontal"
+		  android:text="( 温馨提示：升级有风险，下载升级期间请中断任何交易行为，并保持电源连接，\r\n系统升级可能需要10分钟，请拔掉OTG线，此过程会自动重启，请耐心等待！ )"
+			/>
 
 		<tecsun.cjw.systemupdate.view.RoundProgress
 			android:id="@+id/rp_download"
